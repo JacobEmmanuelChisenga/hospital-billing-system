@@ -1,0 +1,20 @@
+/* Font Awesome Free — self-hosted via npm so icons work offline. */
+@import '@fortawesome/fontawesome-free/css/fontawesome.css';
+@import '@fortawesome/fontawesome-free/css/solid.css';
+@import '@fortawesome/fontawesome-free/css/regular.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide Alpine-powered elements until Alpine initialises (prevents form field flash). */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Print-friendly report pages */
+@media print {
+    aside, .no-print, header { display: none !important; }
+    main { padding: 0 !important; }
+    .print-report { box-shadow: none !important; border: none !important; }
+}
