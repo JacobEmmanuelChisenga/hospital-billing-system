@@ -1,6 +1,8 @@
 @php
     $action = $action ?? request()->url();
     $preset = $preset ?? 'month';
+    $exportCsvRoute = $exportCsvRoute ?? ($exportRoute ?? null);
+    $exportPdfRoute = $exportPdfRoute ?? null;
 @endphp
 
 <form method="GET" action="{{ $action }}" class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm no-print">
@@ -37,15 +39,20 @@
             </div>
         @endisset
 
-        <div class="flex items-end gap-2 {{ isset($showVisitTypeFilter) ? '' : 'md:col-span-2' }}">
+        <div class="flex flex-wrap items-end gap-2 {{ isset($showVisitTypeFilter) ? '' : 'md:col-span-2' }}">
             <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
                 <i class="fa-solid fa-filter mr-2"></i> Apply
             </button>
-            @isset($exportRoute)
-                <a href="{{ $exportRoute }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    <i class="fa-solid fa-file-csv mr-2"></i> Export CSV
+            @if ($exportCsvRoute)
+                <a href="{{ $exportCsvRoute }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fa-solid fa-file-csv mr-2"></i> Download CSV
                 </a>
-            @endisset
+            @endif
+            @if ($exportPdfRoute)
+                <a href="{{ $exportPdfRoute }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> Download PDF
+                </a>
+            @endif
             @isset($printButton)
                 <button type="button" onclick="window.print()" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                     <i class="fa-solid fa-print mr-2"></i> Print
@@ -55,6 +62,6 @@
     </div>
     <p class="mt-2 text-xs text-gray-500">
         Showing data from {{ $from->format('d M Y') }} to {{ $to->format('d M Y') }}.
-        CSV files open in Excel.
+        CSV opens in Excel; PDF downloads a printable report file.
     </p>
 </form>

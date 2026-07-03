@@ -55,7 +55,10 @@
                     <i class="fa-solid fa-filter mr-2"></i> Apply
                 </button>
                 <a href="{{ route('audit-logs.export', request()->query()) }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    <i class="fa-solid fa-file-csv mr-2"></i> Export CSV
+                    <i class="fa-solid fa-file-csv mr-2"></i> Download CSV
+                </a>
+                <a href="{{ route('audit-logs.export.pdf', request()->query()) }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> Download PDF
                 </a>
                 <a href="{{ route('audit-logs.index') }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Clear</a>
             </div>

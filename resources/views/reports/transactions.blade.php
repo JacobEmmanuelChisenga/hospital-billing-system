@@ -11,7 +11,8 @@
 
     @include('reports.partials.filter-form', [
         'showVisitTypeFilter' => true,
-        'exportRoute' => route('reports.transactions.export', request()->query()),
+        'exportCsvRoute' => route('reports.transactions.export', request()->query()),
+        'exportPdfRoute' => route('reports.transactions.export.pdf', request()->query()),
         'printButton' => true,
     ])
 

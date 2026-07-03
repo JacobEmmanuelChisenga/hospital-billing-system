@@ -1,15 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Clinical Dashboard</h2>
-            <p class="mt-1 text-sm text-gray-500">How many patients am I treating and what conditions?</p>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+            <h2 class="text-xl font-semibold text-gray-900">Clinical Dashboard</h2>
+            <p class="mt-1 text-sm text-gray-600">How many patients am I treating and what conditions?</p>
         </div>
     </x-slot>
 
     <div class="grid gap-4 sm:grid-cols-3">
-        <x-dashboard-kpi label="Patients Waiting" :value="number_format($kpis['patientsWaiting'])" tone="amber" :href="route('nurse.queue')" />
-        <x-dashboard-kpi label="Patients Seen" :value="number_format($kpis['patientsSeen'])" tone="green" :href="route('nurse.consultations', ['period' => 'today'])" />
-        <x-dashboard-kpi label="Pending Consultations" :value="number_format($kpis['pendingConsultations'])" tone="orange" :href="route('nurse.active')" />
+        @foreach ($kpis as $kpi)
+            <x-dashboard-kpi
+                :label="$kpi['label']"
+                :value="$kpi['value']"
+                :tone="$kpi['tone']"
+                :href="$kpi['href'] ?? null"
+                :trend="$kpi['trend'] ?? null"
+                :trendLabel="$kpi['trendLabel'] ?? null"
+                :hint="$kpi['hint'] ?? null"
+            />
+        @endforeach
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-2">
@@ -22,9 +30,37 @@
     </div>
 
     <div class="mt-6">
-        <a href="{{ route('nurse.queue') }}" class="block rounded-xl border border-hospital-200 bg-hospital-50 p-5 shadow-sm transition hover:bg-hospital-100">
-            <p class="font-semibold text-hospital-900"><i class="fa-solid fa-list-check mr-2"></i> Go to Today's Queue</p>
-            <p class="mt-1 text-sm text-hospital-800">Start or continue patient consultations.</p>
-        </a>
+        <x-dashboard-recent-panel title="Today's Queue" description="Patients waiting for or in consultation" :href="route('nurse.queue')">
+            @if (count($recent) === 0)
+                <p class="text-sm text-gray-500">No patients in the queue right now.</p>
+            @else
+                <x-table-scroll>
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <th class="pb-3 pr-4">Patient</th>
+                                <th class="pb-3 pr-4">ID</th>
+                                <th class="pb-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach ($recent as $row)
+                                <tr>
+                                    <td class="py-3 pr-4 font-medium text-gray-800">
+                                        <a href="{{ $row['url'] }}" class="hover:text-hospital-700 hover:underline">{{ $row['patient'] }}</a>
+                                    </td>
+                                    <td class="py-3 pr-4 text-gray-600">{{ $row['number'] }}</td>
+                                    <td class="py-3">
+                                        <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ $row['statusClass'] }}">
+                                            {{ $row['status'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </x-table-scroll>
+            @endif
+        </x-dashboard-recent-panel>
     </div>
 </x-app-layout>

@@ -138,4 +138,15 @@ class AuditLogTest extends TestCase
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('attachment', $response->headers->get('content-disposition'));
     }
+
+    public function test_audit_log_pdf_export_downloads(): void
+    {
+        $user = User::factory()->administrator()->create();
+
+        $response = $this->actingAs($user)
+            ->get(route('audit-logs.export.pdf', ['preset' => 'today']));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
 }

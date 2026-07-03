@@ -9,7 +9,11 @@
         </div>
     </x-slot>
 
-    @include('reports.partials.filter-form', ['printButton' => true])
+    @include('reports.partials.filter-form', [
+        'exportCsvRoute' => route('reports.companies.export', request()->query()),
+        'exportPdfRoute' => route('reports.companies.export.pdf', request()->query()),
+        'printButton' => true,
+    ])
 
     <div class="mt-6 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm print-report">
         <div class="table-scroll -mx-4 px-4 sm:mx-0 sm:px-0">

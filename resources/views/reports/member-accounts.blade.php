@@ -10,7 +10,8 @@
     </x-slot>
 
     @include('reports.partials.filter-form', [
-        'exportRoute' => route('reports.member-accounts.export', request()->query()),
+        'exportCsvRoute' => route('reports.member-accounts.export', request()->query()),
+        'exportPdfRoute' => route('reports.member-accounts.export.pdf', request()->query()),
         'printButton' => true,
     ])
 

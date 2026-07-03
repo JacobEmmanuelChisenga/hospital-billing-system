@@ -6,7 +6,11 @@
         </div>
     </x-slot>
 
-    @include('reports.partials.filter-form', ['printButton' => true])
+    @include('reports.partials.filter-form', [
+        'exportCsvRoute' => route('reports.index.export', request()->query()),
+        'exportPdfRoute' => route('reports.index.export.pdf', request()->query()),
+        'printButton' => true,
+    ])
 
     <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4 print-report">
         <div class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">

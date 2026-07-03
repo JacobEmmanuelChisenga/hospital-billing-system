@@ -2,9 +2,8 @@
     Left sidebar navigation — drawer on mobile, fixed column on large screens.
 --}}
 <aside
-    x-cloak
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-    class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[min(100vw,20rem)] flex-col bg-hospital-900 text-white shadow-xl transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:w-64 lg:max-w-none lg:shrink-0 lg:shadow-none"
+    class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[min(100vw,20rem)] -translate-x-full flex-col bg-hospital-900 text-white shadow-xl transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:w-64 lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:shadow-none"
     aria-label="Main navigation"
 >
     <div class="flex items-start justify-between gap-3 border-b border-hospital-700 px-4 py-5 sm:px-5 sm:py-6">

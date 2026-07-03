@@ -1,39 +1,72 @@
+@php
+    $headerTone = match ($theme ?? 'default') {
+        'registry' => 'border-blue-200 bg-blue-50',
+        'nurse' => 'border-emerald-200 bg-emerald-50',
+        'accounts' => 'border-violet-200 bg-violet-50',
+        'admin' => 'border-slate-300 bg-slate-100',
+        default => 'border-gray-100 bg-white',
+    };
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Operations Dashboard</h2>
-            <p class="mt-1 text-sm text-gray-500">What is happening with patient flow today?</p>
+        <div class="rounded-xl border px-5 py-4 {{ $headerTone }}">
+            <h2 class="text-xl font-semibold text-gray-900">Operations Dashboard</h2>
+            <p class="mt-1 text-sm text-gray-600">What is happening with patient flow today?</p>
         </div>
     </x-slot>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <x-dashboard-kpi label="Today's Patients" :value="number_format($kpis['todaysPatients'])" :href="route('visits.index')" />
-        <x-dashboard-kpi label="Pending Visits" :value="number_format($kpis['pendingVisits'])" tone="amber" :href="route('visits.index')" />
-        <x-dashboard-kpi label="Pending Charges" :value="number_format($kpis['pendingCharges'])" tone="orange" :href="route('charges.pending')" />
-        <x-dashboard-kpi label="Completed Today" :value="number_format($kpis['completedToday'])" tone="green" :href="route('charges.history')" />
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($kpis as $kpi)
+            <x-dashboard-kpi
+                :label="$kpi['label']"
+                :value="$kpi['value']"
+                :tone="$kpi['tone']"
+                :href="$kpi['href'] ?? null"
+                :trend="$kpi['trend'] ?? null"
+                :trendLabel="$kpi['trendLabel'] ?? null"
+                :hint="$kpi['hint'] ?? null"
+            />
+        @endforeach
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-2">
-        <x-dashboard-chart :chart="$charts['patientFlow']" />
+        <x-dashboard-chart :chart="$charts['patientFlow']" height="tall" />
         <x-dashboard-chart :chart="$charts['patientTypes']" />
     </div>
 
     <div class="mt-6">
-        <x-dashboard-chart :chart="$charts['pendingQueue']" />
+        <x-dashboard-chart :chart="$charts['pendingWorkload']" />
     </div>
 
-    <div class="mt-6 grid gap-4 sm:grid-cols-3">
-        <a href="{{ route('patients.create') }}" class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-hospital-200">
-            <p class="font-semibold text-gray-800"><i class="fa-solid fa-user-plus mr-2 text-hospital-700"></i> Register Patient</p>
-            <p class="mt-1 text-sm text-gray-500">Open a new member, dependant, or company record.</p>
-        </a>
-        <a href="{{ route('visits.create') }}" class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-hospital-200">
-            <p class="font-semibold text-gray-800"><i class="fa-solid fa-door-open mr-2 text-hospital-700"></i> Open Visit</p>
-            <p class="mt-1 text-sm text-gray-500">Start today's patient journey.</p>
-        </a>
-        <a href="{{ route('charges.post') }}" class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-hospital-200">
-            <p class="font-semibold text-gray-800"><i class="fa-solid fa-file-invoice-dollar mr-2 text-hospital-700"></i> Post Charges</p>
-            <p class="mt-1 text-sm text-gray-500">Bill services after nurse consultation.</p>
-        </a>
+    <div class="mt-6">
+        <x-dashboard-recent-panel title="Recent Registrations" description="Visits opened today" :href="route('visits.index')">
+            @if (count($recent) === 0)
+                <p class="text-sm text-gray-500">No visits registered yet today.</p>
+            @else
+                <x-table-scroll>
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <th class="pb-3 pr-4">Patient</th>
+                                <th class="pb-3 pr-4">ID</th>
+                                <th class="pb-3">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach ($recent as $row)
+                                <tr>
+                                    <td class="py-3 pr-4 font-medium text-gray-800">
+                                        <a href="{{ $row['url'] }}" class="hover:text-hospital-700 hover:underline">{{ $row['patient'] }}</a>
+                                    </td>
+                                    <td class="py-3 pr-4 text-gray-600">{{ $row['number'] }}</td>
+                                    <td class="py-3 text-gray-500">{{ $row['time'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </x-table-scroll>
+            @endif
+        </x-dashboard-recent-panel>
     </div>
 </x-app-layout>

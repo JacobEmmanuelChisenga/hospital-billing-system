@@ -10,7 +10,8 @@
     </x-slot>
 
     @include('reports.partials.filter-form', [
-        'exportRoute' => route('reports.companies.export', array_merge(['company' => $report['company']], request()->query())),
+        'exportCsvRoute' => route('reports.companies.show.export', array_merge(['company' => $report['company']], request()->query())),
+        'exportPdfRoute' => route('reports.companies.show.export.pdf', array_merge(['company' => $report['company']], request()->query())),
         'printButton' => true,
     ])
 

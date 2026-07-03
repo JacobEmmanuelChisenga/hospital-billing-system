@@ -26,7 +26,7 @@ class RoleNavigationTest extends TestCase
         $this->actingAs($user)->get(route('charges.post'))->assertOk();
         $this->actingAs($user)->get(route('charges.history'))->assertOk();
         $this->actingAs($user)->get(route('patients.search'))->assertOk();
-        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Operations Dashboard');
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Registered Today');
     }
 
     public function test_nurse_can_access_nurse_workflow_routes(): void

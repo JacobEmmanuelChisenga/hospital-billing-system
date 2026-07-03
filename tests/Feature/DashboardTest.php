@@ -26,8 +26,10 @@ class DashboardTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Operations Dashboard')
+            ->assertSee('Registered Today')
             ->assertSee('Daily Patient Flow')
-            ->assertSee('Pending Actions Queue')
+            ->assertSee('Pending Workload')
+            ->assertSee('Recent Registrations')
             ->assertSee('data-dashboard-chart', false);
     }
 
@@ -40,7 +42,8 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Clinical Dashboard')
             ->assertSee('Patients Seen Today')
-            ->assertSee('Common Diagnoses')
+            ->assertSee('Top Diagnoses Today')
+            ->assertSee('Today\'s Queue')
             ->assertSee('data-dashboard-chart', false);
     }
 
@@ -52,8 +55,10 @@ class DashboardTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Financial Dashboard')
+            ->assertSee('Total Revenue Today')
             ->assertSee('Daily Revenue Breakdown')
-            ->assertSee('Deposits vs Spending')
+            ->assertSee('Deposits vs Billing Trend')
+            ->assertSee('Recent Receipts')
             ->assertSee('data-dashboard-chart', false);
     }
 
@@ -64,9 +69,15 @@ class DashboardTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('System Dashboard')
-            ->assertSee('System Activity')
-            ->assertSee('User Activity')
+            ->assertSee('Administrator Dashboard')
+            ->assertSee('System Activity (This Week)')
+            ->assertSee('User Activity by Role')
+            ->assertSee('Audit Events Breakdown')
+            ->assertSee('Recent Audit Logs')
+            ->assertSee('View all audit logs')
+            ->assertSee('System Uptime')
+            ->assertSee('Audit Log', false)
+            ->assertSee('Staff Users', false)
             ->assertSee('data-dashboard-chart', false);
     }
 }

@@ -123,15 +123,23 @@ Route::middleware(['auth', 'role:administrator,accounts'])->group(function () {
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/export', [ReportController::class, 'exportSummary'])->name('index.export');
+        Route::get('/export/pdf', [ReportController::class, 'exportSummaryPdf'])->name('index.export.pdf');
         Route::get('/transactions', [ReportController::class, 'transactions'])->name('transactions');
         Route::get('/transactions/export', [ReportController::class, 'exportTransactions'])->name('transactions.export');
+        Route::get('/transactions/export/pdf', [ReportController::class, 'exportTransactionsPdf'])->name('transactions.export.pdf');
         Route::get('/patients/{patient}/statement', [ReportController::class, 'patientStatement'])->name('patient-statement');
         Route::get('/patients/{patient}/statement/export', [ReportController::class, 'exportPatientStatement'])->name('patient-statement.export');
+        Route::get('/patients/{patient}/statement/export/pdf', [ReportController::class, 'exportPatientStatementPdf'])->name('patient-statement.export.pdf');
         Route::get('/member-accounts', [ReportController::class, 'memberAccounts'])->name('member-accounts');
         Route::get('/member-accounts/export', [ReportController::class, 'exportMemberAccounts'])->name('member-accounts.export');
+        Route::get('/member-accounts/export/pdf', [ReportController::class, 'exportMemberAccountsPdf'])->name('member-accounts.export.pdf');
         Route::get('/companies', [ReportController::class, 'companies'])->name('companies');
+        Route::get('/companies/export', [ReportController::class, 'exportCompanies'])->name('companies.export');
+        Route::get('/companies/export/pdf', [ReportController::class, 'exportCompaniesPdf'])->name('companies.export.pdf');
         Route::get('/companies/{company}', [ReportController::class, 'companyShow'])->name('companies.show');
-        Route::get('/companies/{company}/export', [ReportController::class, 'exportCompany'])->name('companies.export');
+        Route::get('/companies/{company}/export', [ReportController::class, 'exportCompany'])->name('companies.show.export');
+        Route::get('/companies/{company}/export/pdf', [ReportController::class, 'exportCompanyPdf'])->name('companies.show.export.pdf');
     });
 });
 
@@ -144,6 +152,7 @@ Route::middleware(['auth', 'role:registry'])->group(function () {
 Route::middleware(['auth', 'role:administrator'])->prefix('audit-logs')->name('audit-logs.')->group(function () {
     Route::get('/', [AuditLogController::class, 'index'])->name('index');
     Route::get('/export', [AuditLogController::class, 'export'])->name('export');
+    Route::get('/export/pdf', [AuditLogController::class, 'exportPdf'])->name('export.pdf');
     Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('show');
 });
 

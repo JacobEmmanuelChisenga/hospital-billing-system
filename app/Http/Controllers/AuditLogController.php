@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\ReportService;
 use App\Support\CsvExporter;
+use App\Support\PdfExporter;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -84,5 +86,28 @@ class AuditLogController extends Controller
         return CsvExporter::download($filename, [
             'Date & Time', 'Action', 'Staff User', 'Description', 'Related Record', 'Metadata',
         ], $rows);
+    }
+
+    /** PDF export of filtered audit entries. */
+    public function exportPdf(AuditLogFilterRequest $request): Response
+    {
+        $range = $this->reportService->resolveDateRange($request);
+        $actionType = AuditActionType::tryFrom((string) $request->input('action_type'));
+        $userId = $request->filled('user_id') ? $request->integer('user_id') : null;
+        $search = $request->string('search')->trim()->toString() ?: null;
+
+        $rows = $this->auditLogService->exportRows(
+            $range['from'],
+            $range['to'],
+            $actionType,
+            $userId,
+            $search,
+        );
+
+        $filename = 'audit-log-'.$range['from']->format('Y-m-d').'-to-'.$range['to']->format('Y-m-d').'.pdf';
+
+        return PdfExporter::download($filename, 'reports.pdf.audit-log', array_merge($range, [
+            'rows' => $rows,
+        ]), 'landscape');
     }
 }
