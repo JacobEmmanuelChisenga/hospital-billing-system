@@ -2,39 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PatientStatus;
-use App\Models\Bill;
-use App\Models\Deposit;
-use App\Models\Patient;
+use App\Services\DashboardService;
 use Illuminate\View\View;
 
 /**
- * Main landing page after login. Module summaries will be added in later phases.
+ * Main landing page after login — role-specific operational dashboards.
  */
 class DashboardController extends Controller
 {
+    public function __construct(
+        private DashboardService $dashboardService,
+    ) {}
+
     public function __invoke(): View
     {
-        return view('dashboard', [
-            'activePatientCount' => Patient::query()
-                ->where('status', PatientStatus::Active)
-                ->count(),
-            'todaysDepositsTotal' => Deposit::query()
-                ->active()
-                ->whereDate('deposit_date', today())
-                ->sum('amount'),
-            'todaysDepositsCount' => Deposit::query()
-                ->active()
-                ->whereDate('deposit_date', today())
-                ->count(),
-            'todaysBillsTotal' => Bill::query()
-                ->posted()
-                ->whereDate('visit_date', today())
-                ->sum('total_amount'),
-            'todaysBillsCount' => Bill::query()
-                ->posted()
-                ->whereDate('visit_date', today())
-                ->count(),
-        ]);
+        $user = auth()->user();
+
+        if ($user->isRegistryClerk()) {
+            return view('dashboard.registry', $this->dashboardService->registry());
+        }
+
+        if ($user->isNurse()) {
+            return view('dashboard.nurse', $this->dashboardService->nurse());
+        }
+
+        if ($user->isAccountsStaff()) {
+            return view('dashboard.accounts', $this->dashboardService->accounts());
+        }
+
+        return view('dashboard.admin', $this->dashboardService->admin());
     }
 }

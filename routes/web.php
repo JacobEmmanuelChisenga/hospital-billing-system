@@ -3,11 +3,13 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BillableServiceController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\ClinicalNoteController;
 use App\Http\Controllers\CompanyAccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\MembershipFeeController;
+use App\Http\Controllers\NurseWorkflowController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffUserController;
@@ -35,6 +37,7 @@ Route::middleware('auth')->group(function () {
 
 // Patient lookup — all operational staff plus admin oversight.
 Route::middleware(['auth', 'role:administrator,accounts,registry,nurse'])->group(function () {
+    Route::get('patients/search', [PatientController::class, 'search'])->name('patients.search');
     Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
     Route::get('patients/{patient}', [PatientController::class, 'show'])->whereNumber('patient')->name('patients.show');
 });
@@ -46,6 +49,12 @@ Route::middleware(['auth', 'role:registry'])->group(function () {
     Route::get('patients/{patient}/edit', [PatientController::class, 'edit'])->whereNumber('patient')->name('patients.edit');
     Route::put('patients/{patient}', [PatientController::class, 'update'])->whereNumber('patient')->name('patients.update');
     Route::patch('patients/{patient}', [PatientController::class, 'update'])->whereNumber('patient');
+
+    Route::prefix('charges')->name('charges.')->group(function () {
+        Route::get('/pending', [ChargeController::class, 'pending'])->name('pending');
+        Route::get('/post', [ChargeController::class, 'post'])->name('post');
+        Route::get('/history', [ChargeController::class, 'history'])->name('history');
+    });
 });
 
 // Patient visits — Registry manages; Nurse and Admin can view.
@@ -68,6 +77,12 @@ Route::middleware(['auth', 'role:registry'])->prefix('visits')->name('visits.')-
 Route::middleware(['auth', 'role:nurse'])->group(function () {
     Route::get('visits/{visit}/clinical-notes', [ClinicalNoteController::class, 'edit'])->whereNumber('visit')->name('clinical-notes.edit');
     Route::post('visits/{visit}/clinical-notes', [ClinicalNoteController::class, 'store'])->whereNumber('visit')->name('clinical-notes.store');
+
+    Route::prefix('nurse')->name('nurse.')->group(function () {
+        Route::get('/queue', [NurseWorkflowController::class, 'queue'])->name('queue');
+        Route::get('/active', [NurseWorkflowController::class, 'active'])->name('active');
+        Route::get('/consultations', [NurseWorkflowController::class, 'consultations'])->name('consultations');
+    });
 });
 
 // Financial operations — Accounts Officer only (create/manage money).

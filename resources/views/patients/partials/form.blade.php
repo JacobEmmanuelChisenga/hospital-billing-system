@@ -1,6 +1,6 @@
 @php
     $isEdit = isset($patient);
-    $selectedType = old('type', $patient->type->value ?? \App\Enums\PatientType::Member->value);
+    $selectedType = old('type', $patient->type->value ?? ($preselectedType ?? \App\Enums\PatientType::Member->value));
 @endphp
 
 <div

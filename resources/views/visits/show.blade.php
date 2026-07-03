@@ -112,14 +112,15 @@
                     </select>
                     <p class="mt-1 text-xs text-gray-500">The clerk selects the service; the system applies the fixed catalogue price.</p>
                 </div>
-                <div class="flex items-end">
-                    <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
+                <div class="flex items-end md:col-span-1">
+                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 md:w-auto">
                         <i class="fa-solid fa-plus mr-2"></i> Add Charge
                     </button>
                 </div>
             </form>
         @endif
 
+        <x-table-scroll>
         <table class="mt-4 min-w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-100 text-left text-gray-500">
@@ -163,15 +164,16 @@
                 </tr>
             </tfoot>
         </table>
+        </x-table-scroll>
 
         @if (($visit->canAddCharges() || $visit->isOpen()) && Auth::user()->canManageVisits())
-            <div class="mt-6 flex flex-wrap gap-3 border-t border-gray-100 pt-6">
+            <div class="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:flex-wrap">
                 @if ($visit->canAddCharges())
-                <form method="POST" action="{{ route('visits.post-bill', $visit) }}" class="inline"
+                <form method="POST" action="{{ route('visits.post-bill', $visit) }}" class="w-full sm:w-auto"
                       onsubmit="return confirm('Post bill and deduct balance? This will complete the visit.');">
                     @csrf
                     @if ($visit->chargesTotal() > $availableBalance)
-                        <div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-4 w-full">
+                        <div class="mb-3 w-full rounded-lg border border-amber-200 bg-amber-50 p-4">
                             <p class="text-sm text-amber-800">Insufficient balance. Confirm to proceed.</p>
                             <label class="mt-2 flex items-center gap-2 text-sm">
                                 <input type="checkbox" name="confirm_insufficient_balance" value="1" class="rounded border-gray-300 text-hospital-600">
@@ -179,22 +181,22 @@
                             </label>
                         </div>
                     @endif
-                    <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800"
+                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto"
                             @disabled($visit->chargeLines->isEmpty())>
                         <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Post Bill & Finish Visit
                     </button>
                 </form>
                 @endif
-                <form method="POST" action="{{ route('visits.cancel', $visit) }}" class="inline"
+                <form method="POST" action="{{ route('visits.cancel', $visit) }}" class="w-full sm:w-auto"
                       onsubmit="return confirm('Cancel this visit?');">
                     @csrf
-                    <button type="submit" class="inline-flex items-center rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
+                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 sm:w-auto">
                         Cancel Visit
                     </button>
                 </form>
             </div>
         @elseif ($visit->bill)
-            <div class="mt-6 flex gap-3 border-t border-gray-100 pt-6">
+            <div class="mt-6 flex flex-col gap-2 border-t border-gray-100 pt-6 sm:flex-row sm:gap-3">
                 <a href="{{ route('billing.show', $visit->bill) }}" class="text-sm text-hospital-700 hover:underline">View Bill #{{ $visit->bill->id }}</a>
                 @if (Auth::user()->canViewFinancialRecords())
                     <a href="{{ route('billing.receipt', $visit->bill) }}" class="text-sm text-hospital-700 hover:underline">Print Receipt</a>

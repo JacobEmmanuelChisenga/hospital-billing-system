@@ -13,7 +13,7 @@
         @if ($todaysBills->isEmpty())
             <p class="mt-4 text-sm text-gray-500">No bills posted today.</p>
         @else
-            <div class="mt-4 overflow-x-auto">
+            <div class="mt-4 table-scroll -mx-6 px-6 sm:mx-0 sm:px-0">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 text-left text-gray-500">

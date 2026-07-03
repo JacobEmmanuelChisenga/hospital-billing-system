@@ -193,7 +193,7 @@ class BillingTest extends TestCase
             'treatment_notes' => 'Paracetamol 1g',
             'procedures_performed' => 'Injection administered',
             'follow_up_instructions' => 'Return if symptoms persist',
-        ])->assertRedirect(route('visits.show', $visit));
+        ])->assertRedirect(route('nurse.queue'));
 
         $this->assertDatabaseHas('clinical_notes', [
             'visit_id' => $visit->id,
@@ -266,7 +266,7 @@ class BillingTest extends TestCase
             'diagnosis' => 'Malaria',
             'treatment_notes' => 'Medication administered',
             'procedures_performed' => 'Malaria test',
-        ])->assertRedirect(route('visits.show', $visit));
+        ])->assertRedirect(route('nurse.queue'));
     }
 
     private function addServiceCharge(User $user, Visit $visit, string $serviceName): void

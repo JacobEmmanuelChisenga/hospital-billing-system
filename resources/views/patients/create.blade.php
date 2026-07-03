@@ -1,8 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="text-xl font-semibold text-gray-800">Register Patient</h2>
-            <p class="mt-1 text-sm text-gray-500">Create a new member, dependant, or company patient account.</p>
+            @php
+                $titles = [
+                    'member' => 'Register Member',
+                    'dependant' => 'Register Dependant',
+                    'company' => 'Register Company Patient',
+                ];
+                $title = $titles[$preselectedType ?? ''] ?? 'Register Patient';
+            @endphp
+            <h2 class="text-xl font-semibold text-gray-800">{{ $title }}</h2>
+            <p class="mt-1 text-sm text-gray-500">Create a new patient record for the High Cost Section.</p>
         </div>
     </x-slot>
 

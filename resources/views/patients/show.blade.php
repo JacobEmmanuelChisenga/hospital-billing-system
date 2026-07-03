@@ -5,50 +5,50 @@
                 <h2 class="text-xl font-semibold text-gray-800">{{ $patient->name }}</h2>
                 <p class="mt-1 text-sm text-gray-500">{{ $patient->type->label() }} &middot; {{ $patient->status->label() }}</p>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 @if (Auth::user()->canManageVisits() && ! $patient->openVisit())
                     <a href="{{ route('visits.create', ['patient_id' => $patient->id]) }}"
-                       class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
+                       class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto">
                         <i class="fa-solid fa-door-open mr-2"></i> Open Visit
                     </a>
                 @elseif ($patient->openVisit() && (Auth::user()->canManageVisits() || Auth::user()->canRecordClinicalNotes()))
                     <a href="{{ route('visits.show', $patient->openVisit()) }}"
-                       class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
+                       class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto">
                         <i class="fa-solid fa-folder-open mr-2"></i> Active Visit
                     </a>
                 @endif
                 @if ($patient->isMember() && Auth::user()->canPerformFinancialOperations())
                     <a href="{{ route('deposits.create', ['patient_id' => $patient->id]) }}"
-                       class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
+                       class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto">
                         <i class="fa-solid fa-money-bill-wave mr-2"></i> Load Deposit
                     </a>
                 @endif
                 @if (($patient->isMember() || $patient->isDependant()) && Auth::user()->canPerformFinancialOperations())
                     <a href="{{ route('membership-fees.create', ['patient_id' => $patient->id]) }}"
-                       class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                       class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto">
                         <i class="fa-solid fa-id-card mr-2"></i> Membership Payment
                     </a>
                 @endif
                 @if (Auth::user()->canViewFinancialRecords())
                     <a href="{{ route('reports.patient-statement', ['patient' => $patient, 'preset' => 'month']) }}"
-                       class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                       class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto">
                         <i class="fa-solid fa-file-lines mr-2"></i> Statement
                     </a>
                 @endif
                 @if ($patient->isCompanyPatient() && $patient->company && Auth::user()->canAccessAccountsModules())
                     <a href="{{ route('company-accounts.show', $patient->company) }}"
-                       class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
+                       class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto">
                         <i class="fa-solid fa-building mr-2"></i> Company Account
                     </a>
                 @endif
                 @if (Auth::user()->canManagePatientDemographics())
                     <a href="{{ route('patients.edit', $patient) }}"
-                       class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                       class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto">
                         <i class="fa-solid fa-pen-to-square mr-2"></i> Edit
                     </a>
                 @endif
                 <a href="{{ route('patients.index') }}"
-                   class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                   class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Back to List
                 </a>
             </div>
@@ -221,7 +221,7 @@
     @if ($patient->isMember() && $patient->dependants->isNotEmpty())
         <div class="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-800">Dependants</h3>
-            <div class="mt-4 overflow-x-auto">
+            <div class="mt-4 table-scroll -mx-6 px-6 sm:mx-0 sm:px-0">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 text-left text-gray-500">

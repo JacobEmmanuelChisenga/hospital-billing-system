@@ -47,11 +47,35 @@ class PatientController extends Controller
     }
 
     /**
+     * Quick patient lookup — search-first view for Registry and Nurse.
+     */
+    public function search(Request $request): View
+    {
+        $search = $request->string('search')->trim()->toString();
+
+        $patients = Patient::query()
+            ->with(['company', 'principalMember', 'membership'])
+            ->when($search !== '', fn ($query) => $query->search($search))
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('patients.search', [
+            'patients' => $patients,
+            'search' => $search,
+        ]);
+    }
+
+    /**
      * Show the registration form for a new member, dependant, or company patient.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('patients.create', $this->formData());
+        $type = $request->string('type')->toString();
+
+        return view('patients.create', array_merge($this->formData(), [
+            'preselectedType' => in_array($type, ['member', 'dependant', 'company'], true) ? $type : null,
+        ]));
     }
 
     /**
@@ -166,6 +190,7 @@ class PatientController extends Controller
                 ->get(),
             'patientTypes' => PatientType::cases(),
             'patientStatuses' => PatientStatus::cases(),
+            'preselectedType' => null,
         ];
     }
 

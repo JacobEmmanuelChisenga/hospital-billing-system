@@ -12,9 +12,22 @@
     display: none !important;
 }
 
+@layer components {
+    /* Horizontal scroll for wide data tables on small screens. */
+    .table-scroll {
+        @apply overflow-x-auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Comfortable tap targets for icon buttons on touch devices. */
+    .touch-target {
+        @apply inline-flex min-h-[2.5rem] min-w-[2.5rem] items-center justify-center;
+    }
+}
+
 /* Print-friendly report pages */
 @media print {
-    aside, .no-print, header { display: none !important; }
+    aside, .no-print, header, .lg\:hidden { display: none !important; }
     main { padding: 0 !important; }
     .print-report { box-shadow: none !important; border: none !important; }
 }

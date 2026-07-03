@@ -35,7 +35,7 @@ class ClinicalNoteController extends Controller
         $this->clinicalNoteService->record($visit, $request->validated(), $request->user());
 
         return redirect()
-            ->route('visits.show', $visit)
-            ->with('success', 'Clinical notes saved.');
+            ->route('nurse.queue')
+            ->with('success', 'Consultation saved. Visit is now awaiting billing.');
     }
 }

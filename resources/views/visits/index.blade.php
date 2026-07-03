@@ -41,6 +41,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+        <x-table-scroll>
         <table class="min-w-full divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-50">
                 <tr>
@@ -75,6 +76,7 @@
                 @endforelse
             </tbody>
         </table>
+        </x-table-scroll>
         @if ($visits->hasPages())
             <div class="border-t border-gray-100 px-4 py-3">{{ $visits->links() }}</div>
         @endif

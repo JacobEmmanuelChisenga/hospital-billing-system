@@ -34,9 +34,9 @@
             </div>
 
             {{-- Right panel: login form --}}
-            <div class="flex flex-1 flex-col justify-center items-center px-6 py-12 bg-gray-50">
+            <div class="flex flex-1 flex-col items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 sm:py-12">
                 <div class="w-full max-w-md">
-                    <div class="lg:hidden mb-8 text-center">
+                    <div class="mb-6 text-center lg:hidden">
                         <p class="text-xs font-semibold uppercase tracking-wider text-hospital-600">
                             {{ config('hospital.name') }}
                         </p>
@@ -45,7 +45,7 @@
                         </h1>
                     </div>
 
-                    <div class="bg-white shadow-md rounded-xl px-8 py-8 border border-gray-100">
+                    <div class="rounded-xl border border-gray-100 bg-white px-5 py-7 shadow-md sm:px-8 sm:py-8">
                         <h2 class="text-lg font-semibold text-gray-900">Staff Sign In</h2>
                         <p class="mt-1 text-sm text-gray-500">
                             Session expires after {{ config('hospital.session_lifetime_minutes') }} minutes of inactivity.
