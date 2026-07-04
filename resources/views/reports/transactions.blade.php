@@ -1,12 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800">Transaction Report</h2>
-                <p class="mt-1 text-sm text-gray-500">All deposits, bills, voids, and reversals in the period.</p>
-            </div>
-            <a href="{{ route('reports.index', request()->query()) }}" class="text-sm text-hospital-700 hover:underline no-print">&larr; Reports</a>
-        </div>
+        <x-page-header title="Transaction Report" subtitle="All deposits, bills, voids, and reversals in the period.">
+            <x-slot name="actions">
+                <a href="{{ route('reports.index', request()->query()) }}" class="btn-ghost no-print">&larr; Reports</a>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     @include('reports.partials.filter-form', [
@@ -16,40 +14,40 @@
         'printButton' => true,
     ])
 
-    <div class="mt-6 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm print-report">
-        <div class="table-scroll -mx-4 px-4 sm:mx-0 sm:px-0">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50">
+    <x-data-panel class="mt-6 print-report">
+        <x-table-scroll>
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Date</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Type</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Party</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Reference</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-600">Amount (K)</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Party</th>
+                        <th>Reference</th>
+                        <th class="text-right">Amount (K)</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody>
                     @forelse ($transactions as $row)
                         <tr>
-                            <td class="px-4 py-3 text-gray-700">
+                            <td class="whitespace-nowrap">
                                 {{ $row['date'] instanceof \DateTimeInterface ? $row['date']->format('d M Y') : $row['date'] }}
                             </td>
-                            <td class="px-4 py-3 text-gray-700">{{ $row['type'] }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $row['party'] }}</td>
-                            <td class="px-4 py-3 text-gray-500">{{ $row['reference'] }}</td>
-                            <td class="px-4 py-3 text-right font-medium @if($row['direction'] === 'in') text-green-700 @else text-red-700 @endif">
+                            <td>{{ $row['type'] }}</td>
+                            <td>{{ $row['party'] }}</td>
+                            <td class="text-slate-500">{{ $row['reference'] }}</td>
+                            <td class="text-right font-medium @if($row['direction'] === 'in') text-emerald-700 @else text-red-700 @endif">
                                 {{ $row['direction'] === 'in' ? '+' : '-' }}{{ number_format($row['amount'], 2) }}
                             </td>
-                            <td class="px-4 py-3 text-gray-700">{{ $row['status'] }}</td>
+                            <td>{{ $row['status'] }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-12 text-center text-gray-500">No transactions in this period.</td>
+                            <td colspan="6" class="!py-12 text-center text-slate-500">No transactions in this period.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
-    </div>
+        </x-table-scroll>
+    </x-data-panel>
 </x-app-layout>

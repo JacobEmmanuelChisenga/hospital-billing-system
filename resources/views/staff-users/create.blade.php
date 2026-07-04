@@ -1,14 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Add Staff User</h2>
-            <p class="mt-1 text-sm text-gray-500">Create a new staff account with role and initial password.</p>
-        </div>
+        <x-page-header title="Add Staff User" subtitle="Create a new staff account with role and initial password." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-2xl">
         <form method="POST" action="{{ route('staff-users.store') }}" class="space-y-6">
             @csrf
 
@@ -27,8 +24,7 @@
             <div class="grid gap-6 sm:grid-cols-2">
                 <div>
                     <x-input-label for="role" :value="__('Role')" />
-                    <select id="role" name="role" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">
+                    <select id="role" name="role" required class="form-input mt-1">
                         @foreach ($roles as $role)
                             <option value="{{ $role->value }}" @selected(old('role') === $role->value)>{{ $role->label() }}</option>
                         @endforeach
@@ -37,8 +33,7 @@
                 </div>
                 <div>
                     <x-input-label for="status" :value="__('Status')" />
-                    <select id="status" name="status" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">
+                    <select id="status" name="status" required class="form-input mt-1">
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(old('status', 'active') === $status->value)>{{ $status->label() }}</option>
                         @endforeach
@@ -59,11 +54,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-user-plus mr-2"></i> Create Staff User
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-user-plus"></i> Create Staff User
                 </button>
-                <a href="{{ route('staff-users.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                <a href="{{ route('staff-users.index') }}" class="btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

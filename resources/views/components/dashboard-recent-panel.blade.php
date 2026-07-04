@@ -5,19 +5,19 @@
     'hrefLabel' => 'View all',
 ])
 
-<div class="rounded-xl border border-gray-100 bg-white shadow-sm">
-    <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+<div class="data-panel">
+    <div class="panel-header">
         <div>
-            <h3 class="text-base font-semibold text-gray-800">{{ $title }}</h3>
+            <h3 class="section-title">{{ $title }}</h3>
             @if ($description)
-                <p class="mt-1 text-sm text-gray-500">{{ $description }}</p>
+                <p class="section-subtitle">{{ $description }}</p>
             @endif
         </div>
         @if ($href)
-            <a href="{{ $href }}" class="shrink-0 text-sm font-medium text-hospital-700 hover:underline">{{ $hrefLabel }}</a>
+            <a href="{{ $href }}" class="action-link shrink-0 text-sm">{{ $hrefLabel }}</a>
         @endif
     </div>
-    <div class="px-5 py-4">
+    <div class="panel-body !pt-0">
         {{ $slot }}
     </div>
 </div>

@@ -1,32 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            @php
-                $titles = [
-                    'member' => 'Register Member',
-                    'dependant' => 'Register Dependant',
-                    'company' => 'Register Company Patient',
-                ];
-                $title = $titles[$preselectedType ?? ''] ?? 'Register Patient';
-            @endphp
-            <h2 class="text-xl font-semibold text-gray-800">{{ $title }}</h2>
-            <p class="mt-1 text-sm text-gray-500">Create a new patient record for the High Cost Section.</p>
-        </div>
+        @php
+            $titles = [
+                'member' => 'Register Member',
+                'dependant' => 'Register Dependant',
+                'company' => 'Register Company Patient',
+            ];
+            $title = $titles[$preselectedType ?? ''] ?? 'Register Patient';
+        @endphp
+        <x-page-header :title="$title" subtitle="Create a new patient record for the High Cost Section." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-3xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-3xl">
         <form method="POST" action="{{ route('patients.store') }}" class="space-y-6">
             @csrf
 
             @include('patients.partials.form')
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-floppy-disk mr-2"></i> Register Patient
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Register Patient
                 </button>
-                <a href="{{ route('patients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                <a href="{{ route('patients.index') }}" class="btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

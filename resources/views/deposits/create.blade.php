@@ -1,14 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Load Member Deposit</h2>
-            <p class="mt-1 text-sm text-gray-500">Add funds to a member's high-cost account balance.</p>
-        </div>
+        <x-page-header title="Load Member Deposit" subtitle="Add funds to a member's high-cost account balance." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-2xl">
         <form method="POST" action="{{ route('deposits.store') }}"
               x-data="{ amount: @js(old('amount', '')), threshold: @js($largeDepositThreshold) }"
               class="space-y-6">
@@ -16,8 +13,7 @@
 
             <div>
                 <x-input-label for="patient_id" :value="__('Member Account')" />
-                <select id="patient_id" name="patient_id" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">
+                <select id="patient_id" name="patient_id" required class="form-input mt-1">
                     <option value="">Select member...</option>
                     @foreach ($members as $member)
                         <option value="{{ $member->id }}" @selected((string) old('patient_id', $selectedPatientId) === (string) $member->id)>
@@ -48,8 +44,7 @@
 
             <div>
                 <x-input-label for="payment_method" :value="__('Payment Method')" />
-                <select id="payment_method" name="payment_method" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">
+                <select id="payment_method" name="payment_method" required class="form-input mt-1">
                     @foreach ($paymentMethods as $value => $label)
                         <option value="{{ $value }}" @selected(old('payment_method', 'cash') === $value)>{{ $label }}</option>
                     @endforeach
@@ -66,16 +61,14 @@
 
             <div>
                 <x-input-label for="notes" :value="__('Notes')" />
-                <textarea id="notes" name="notes" rows="2"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">{{ old('notes') }}</textarea>
+                <textarea id="notes" name="notes" rows="2" class="form-input mt-1">{{ old('notes') }}</textarea>
                 <x-input-error :messages="$errors->get('notes')" class="mt-2" />
             </div>
 
-            {{-- Staff must confirm deposits at or above the configured threshold. --}}
             <div x-show="parseFloat(amount) >= threshold" x-cloak
                  class="rounded-lg border border-amber-200 bg-amber-50 p-4">
                 <p class="text-sm font-medium text-amber-800">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    <i class="fa-solid fa-triangle-exclamation"></i>
                     Large deposit — please confirm
                 </p>
                 <p class="mt-1 text-sm text-amber-700">
@@ -84,17 +77,17 @@
                 <label class="mt-3 flex items-start gap-2">
                     <input type="checkbox" name="confirm_large_deposit" value="1"
                         @checked(old('confirm_large_deposit'))
-                        class="mt-1 rounded border-gray-300 text-hospital-600 focus:ring-hospital-500">
+                        class="mt-1 rounded border-slate-300 text-hospital-600 focus:ring-hospital-500">
                     <span class="text-sm text-amber-900">I confirm this large deposit amount is correct.</span>
                 </label>
                 <x-input-error :messages="$errors->get('confirm_large_deposit')" class="mt-2" />
             </div>
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-money-bill-wave mr-2"></i> Load Deposit
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-money-bill-wave"></i> Load Deposit
                 </button>
-                <a href="{{ route('deposits.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                <a href="{{ route('deposits.index') }}" class="btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

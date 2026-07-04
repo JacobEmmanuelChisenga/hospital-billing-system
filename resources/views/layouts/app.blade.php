@@ -16,7 +16,7 @@
         x-data="{ sidebarOpen: false }"
         @keydown.escape.window="sidebarOpen = false"
         :class="{ 'max-lg:overflow-hidden': sidebarOpen }"
-        class="font-sans antialiased bg-gray-100"
+        class="font-sans antialiased page-shell"
     >
         {{-- Mobile sidebar backdrop --}}
         <div
@@ -38,7 +38,7 @@
 
             <div class="flex min-w-0 flex-1 flex-col">
                 {{-- Mobile top bar --}}
-                <div class="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+                <div class="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md lg:hidden">
                     <button
                         type="button"
                         @click="sidebarOpen = true"
@@ -61,14 +61,14 @@
                 </div>
 
                 @isset($header)
-                    <header class="border-b border-gray-200 bg-white shadow-sm">
-                        <div class="px-4 py-4 sm:px-6 sm:py-5">
+                    <header class="main-header">
+                        <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                             {{ $header }}
                         </div>
                     </header>
                 @endisset
 
-                <main class="flex-1 p-4 sm:p-6">
+                <main class="main-content">
                     {{ $slot }}
                 </main>
             </div>

@@ -1,14 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Edit Company Account</h2>
-            <p class="mt-1 text-sm text-gray-500">Update company details used for sponsored patients and statements.</p>
-        </div>
+        <x-page-header title="Edit Company Account" subtitle="Update company details used for sponsored patients and statements." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-2xl">
         <form method="POST" action="{{ route('company-accounts.update', $company) }}" class="space-y-6">
             @csrf
             @method('PATCH')
@@ -40,16 +37,15 @@
 
             <div>
                 <x-input-label for="notes" :value="__('Notes')" />
-                <textarea id="notes" name="notes" rows="3"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">{{ old('notes', $company->notes) }}</textarea>
+                <textarea id="notes" name="notes" rows="3" class="form-input mt-1">{{ old('notes', $company->notes) }}</textarea>
                 <x-input-error :messages="$errors->get('notes')" class="mt-2" />
             </div>
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save Changes
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
                 </button>
-                <a href="{{ route('company-accounts.show', $company) }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                <a href="{{ route('company-accounts.show', $company) }}" class="btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

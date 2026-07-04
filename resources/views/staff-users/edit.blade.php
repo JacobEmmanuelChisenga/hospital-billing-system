@@ -1,17 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800">Edit Staff User</h2>
-                <p class="mt-1 text-sm text-gray-500">{{ $staffUser->name }} — {{ $staffUser->email }}</p>
-            </div>
-            <a href="{{ route('staff-users.index') }}" class="text-sm text-hospital-700 hover:underline">&larr; Staff Users</a>
-        </div>
+        <x-page-header title="Edit Staff User" subtitle="{{ $staffUser->name }} — {{ $staffUser->email }}">
+            <x-slot name="actions">
+                <a href="{{ route('staff-users.index') }}" class="btn-ghost">&larr; Staff Users</a>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-2xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-2xl">
         <form method="POST" action="{{ route('staff-users.update', $staffUser) }}" class="space-y-6">
             @csrf
             @method('PATCH')
@@ -31,8 +29,7 @@
             <div class="grid gap-6 sm:grid-cols-2">
                 <div>
                     <x-input-label for="role" :value="__('Role')" />
-                    <select id="role" name="role" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500"
+                    <select id="role" name="role" required class="form-input mt-1"
                         @disabled($staffUser->id === Auth::id())>
                         @foreach ($roles as $role)
                             <option value="{{ $role->value }}" @selected(old('role', $staffUser->role->value) === $role->value)>{{ $role->label() }}</option>
@@ -40,14 +37,13 @@
                     </select>
                     @if ($staffUser->id === Auth::id())
                         <input type="hidden" name="role" value="{{ $staffUser->role->value }}">
-                        <p class="mt-1 text-xs text-gray-500">You cannot change your own role.</p>
+                        <p class="form-hint mt-1">You cannot change your own role.</p>
                     @endif
                     <x-input-error :messages="$errors->get('role')" class="mt-2" />
                 </div>
                 <div>
                     <x-input-label for="status" :value="__('Status')" />
-                    <select id="status" name="status" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500"
+                    <select id="status" name="status" required class="form-input mt-1"
                         @disabled($staffUser->id === Auth::id())>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(old('status', $staffUser->status->value) === $status->value)>{{ $status->label() }}</option>
@@ -55,15 +51,15 @@
                     </select>
                     @if ($staffUser->id === Auth::id())
                         <input type="hidden" name="status" value="{{ $staffUser->status->value }}">
-                        <p class="mt-1 text-xs text-gray-500">You cannot deactivate your own account.</p>
+                        <p class="form-hint mt-1">You cannot deactivate your own account.</p>
                     @endif
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
             </div>
 
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <h3 class="text-sm font-semibold text-gray-800">Reset Password</h3>
-                <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current password.</p>
+            <div class="card card-body bg-slate-50">
+                <h3 class="section-title">Reset Password</h3>
+                <p class="section-subtitle">Leave blank to keep the current password.</p>
                 <div class="mt-4 grid gap-6 sm:grid-cols-2">
                     <div>
                         <x-input-label for="password" :value="__('New Password')" />
@@ -77,11 +73,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-save mr-2"></i> Save Changes
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-save"></i> Save Changes
                 </button>
-                <a href="{{ route('staff-users.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                <a href="{{ route('staff-users.index') }}" class="btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

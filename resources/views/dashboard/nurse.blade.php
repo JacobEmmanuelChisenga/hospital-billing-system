@@ -1,9 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-            <h2 class="text-xl font-semibold text-gray-900">Clinical Dashboard</h2>
-            <p class="mt-1 text-sm text-gray-600">How many patients am I treating and what conditions?</p>
-        </div>
+        <x-page-header
+            title="Clinical Dashboard"
+            subtitle="How many patients am I treating and what conditions?"
+            theme="nurse"
+            :dashboard="true"
+        />
     </x-slot>
 
     <div class="grid gap-4 sm:grid-cols-3">
@@ -32,28 +34,26 @@
     <div class="mt-6">
         <x-dashboard-recent-panel title="Today's Queue" description="Patients waiting for or in consultation" :href="route('nurse.queue')">
             @if (count($recent) === 0)
-                <p class="text-sm text-gray-500">No patients in the queue right now.</p>
+                <p class="text-sm text-slate-500">No patients in the queue right now.</p>
             @else
                 <x-table-scroll>
-                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                    <table class="data-table">
                         <thead>
-                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                <th class="pb-3 pr-4">Patient</th>
-                                <th class="pb-3 pr-4">ID</th>
-                                <th class="pb-3">Status</th>
+                            <tr>
+                                <th>Patient</th>
+                                <th>ID</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-50">
+                        <tbody>
                             @foreach ($recent as $row)
                                 <tr>
-                                    <td class="py-3 pr-4 font-medium text-gray-800">
-                                        <a href="{{ $row['url'] }}" class="hover:text-hospital-700 hover:underline">{{ $row['patient'] }}</a>
+                                    <td class="font-medium text-slate-800">
+                                        <a href="{{ $row['url'] }}" class="action-link">{{ $row['patient'] }}</a>
                                     </td>
-                                    <td class="py-3 pr-4 text-gray-600">{{ $row['number'] }}</td>
-                                    <td class="py-3">
-                                        <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ $row['statusClass'] }}">
-                                            {{ $row['status'] }}
-                                        </span>
+                                    <td>{{ $row['number'] }}</td>
+                                    <td>
+                                        <span class="badge {{ $row['statusClass'] }}">{{ $row['status'] }}</span>
                                     </td>
                                 </tr>
                             @endforeach

@@ -12,16 +12,237 @@
     display: none !important;
 }
 
+@layer base {
+    body {
+        @apply text-slate-800;
+    }
+}
+
 @layer components {
-    /* Horizontal scroll for wide data tables on small screens. */
+    /* ── Layout ─────────────────────────────────────────────── */
+    .page-shell {
+        @apply bg-gradient-to-br from-slate-50 via-white to-slate-100;
+    }
+
+    .main-header {
+        @apply border-b border-slate-200/80 bg-white/90 backdrop-blur-md;
+    }
+
+    .main-content {
+        @apply flex-1 p-4 sm:p-6 lg:p-8;
+    }
+
+    /* ── Typography ─────────────────────────────────────────── */
+    .page-title {
+        @apply text-2xl font-bold tracking-tight text-slate-900;
+    }
+
+    .page-subtitle {
+        @apply mt-1 text-sm leading-relaxed text-slate-500;
+    }
+
+    .section-title {
+        @apply text-base font-semibold text-slate-900;
+    }
+
+    .section-subtitle {
+        @apply mt-1 text-sm text-slate-500;
+    }
+
+    /* ── Page header (role-themed) ────────────────────────── */
+    .page-header {
+        @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+    }
+
+    .page-header--dashboard {
+        @apply rounded-2xl border px-5 py-5 sm:px-6;
+    }
+
+    .page-header--registry {
+        @apply border-blue-200/80 bg-gradient-to-r from-blue-50 to-sky-50;
+    }
+
+    .page-header--nurse {
+        @apply border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-teal-50;
+    }
+
+    .page-header--accounts {
+        @apply border-violet-200/80 bg-gradient-to-r from-violet-50 to-purple-50;
+    }
+
+    .page-header--admin {
+        @apply border-slate-200/80 bg-gradient-to-r from-slate-50 to-gray-100;
+    }
+
+    /* ── Cards & panels ─────────────────────────────────────── */
+    .card {
+        @apply rounded-2xl border border-slate-200/70 bg-white shadow-sm shadow-slate-200/40;
+    }
+
+    .card-body {
+        @apply p-5 sm:p-6;
+    }
+
+    .filter-panel {
+        @apply card card-body mb-6;
+    }
+
+    .data-panel {
+        @apply card overflow-hidden;
+    }
+
+    .panel-header {
+        @apply flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6;
+    }
+
+    .panel-body {
+        @apply px-5 py-4 sm:px-6 sm:py-5;
+    }
+
+    .panel-footer {
+        @apply border-t border-slate-100 px-5 py-3 sm:px-6;
+    }
+
+    /* ── KPI / stat cards ───────────────────────────────────── */
+    .stat-card {
+        @apply card relative overflow-hidden p-5 transition-shadow hover:shadow-md;
+    }
+
+    .stat-card::before {
+        content: '';
+        @apply absolute inset-y-0 left-0 w-1 rounded-l-2xl;
+    }
+
+    .stat-card--default::before { @apply bg-hospital-500; }
+    .stat-card--amber::before { @apply bg-amber-500; }
+    .stat-card--orange::before { @apply bg-orange-500; }
+    .stat-card--green::before { @apply bg-emerald-500; }
+    .stat-card--blue::before { @apply bg-blue-500; }
+    .stat-card--purple::before { @apply bg-violet-500; }
+    .stat-card--slate::before { @apply bg-slate-500; }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply btn bg-hospital-700 text-white shadow-sm hover:bg-hospital-800 focus:ring-hospital-500;
+    }
+
+    .btn-secondary {
+        @apply btn border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 focus:ring-slate-400;
+    }
+
+    .btn-ghost {
+        @apply btn text-hospital-700 hover:bg-hospital-50 focus:ring-hospital-400;
+    }
+
+    .btn-danger {
+        @apply btn bg-red-600 text-white shadow-sm hover:bg-red-700 focus:ring-red-500;
+    }
+
+    .btn-sm {
+        @apply rounded-lg px-3 py-1.5 text-xs;
+    }
+
+    /* ── Forms ──────────────────────────────────────────────── */
+    .form-label {
+        @apply block text-sm font-medium text-slate-700;
+    }
+
+    .form-input {
+        @apply mt-1.5 block w-full rounded-xl border-slate-200 bg-white text-sm text-slate-900 shadow-sm transition focus:border-hospital-500 focus:ring-hospital-500;
+    }
+
+    .form-hint {
+        @apply mt-1.5 text-xs text-slate-500;
+    }
+
+    /* ── Tables ─────────────────────────────────────────────── */
     .table-scroll {
         @apply overflow-x-auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Comfortable tap targets for icon buttons on touch devices. */
+    .data-table {
+        @apply min-w-full divide-y divide-slate-100 text-sm;
+    }
+
+    .data-table thead {
+        @apply bg-slate-50/80;
+    }
+
+    .data-table thead th {
+        @apply px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 first:sm:pl-6 last:sm:pr-6;
+    }
+
+    .data-table tbody {
+        @apply divide-y divide-slate-50 bg-white;
+    }
+
+    .data-table tbody td {
+        @apply px-4 py-3.5 text-slate-700 first:sm:pl-6 last:sm:pr-6;
+    }
+
+    .data-table tbody tr {
+        @apply transition-colors hover:bg-slate-50/80;
+    }
+
+    /* ── Badges ─────────────────────────────────────────────── */
+    .badge {
+        @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    }
+
+    .badge-success { @apply badge bg-emerald-100 text-emerald-800; }
+    .badge-warning { @apply badge bg-amber-100 text-amber-800; }
+    .badge-danger { @apply badge bg-red-100 text-red-800; }
+    .badge-info { @apply badge bg-blue-100 text-blue-800; }
+    .badge-neutral { @apply badge bg-slate-100 text-slate-600; }
+
+    /* ── List / queue cards ─────────────────────────────────── */
+    .list-card {
+        @apply card block p-4 transition-all duration-150 hover:border-hospital-200 hover:shadow-md sm:p-5;
+    }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    .empty-state {
+        @apply card card-body py-12 text-center;
+    }
+
+    .empty-state-icon {
+        @apply mx-auto mb-4 text-4xl text-slate-300;
+    }
+
+    .empty-state-text {
+        @apply text-sm text-slate-500;
+    }
+
+    /* ── Flash alerts ───────────────────────────────────────── */
+    .alert {
+        @apply mb-6 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-sm;
+    }
+
+    .alert-success {
+        @apply alert border-emerald-200 bg-emerald-50 text-emerald-800;
+    }
+
+    .alert-error {
+        @apply alert border-red-200 bg-red-50 text-red-800;
+    }
+
+    /* ── Touch targets ────────────────────────────────────────── */
     .touch-target {
         @apply inline-flex min-h-[2.5rem] min-w-[2.5rem] items-center justify-center;
+    }
+
+    /* ── Action links in tables ─────────────────────────────── */
+    .action-link {
+        @apply font-medium text-hospital-700 transition hover:text-hospital-900 hover:underline;
+    }
+
+    .icon-btn {
+        @apply touch-target rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
     }
 }
 
@@ -30,4 +251,5 @@
     aside, .no-print, header, .lg\:hidden { display: none !important; }
     main { padding: 0 !important; }
     .print-report { box-shadow: none !important; border: none !important; }
+    .page-shell { background: white !important; }
 }

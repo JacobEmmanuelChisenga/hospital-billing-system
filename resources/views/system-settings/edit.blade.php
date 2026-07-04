@@ -1,20 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">System Settings</h2>
-            <p class="mt-1 text-sm text-gray-500">Hospital branding and billing thresholds used across the application.</p>
-        </div>
+        <x-page-header title="System Settings" subtitle="Hospital branding and billing thresholds used across the application." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="max-w-3xl rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="card card-body max-w-3xl">
         <form method="POST" action="{{ route('system-settings.update') }}" class="space-y-8">
             @csrf
             @method('PATCH')
 
             <div>
-                <h3 class="text-base font-semibold text-gray-800">Hospital Branding</h3>
+                <h3 class="section-title">Hospital Branding</h3>
                 <div class="mt-4 grid gap-6">
                     <div>
                         <x-input-label for="name" :value="__('Hospital Name')" />
@@ -39,9 +36,9 @@
                 </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-8">
-                <h3 class="text-base font-semibold text-gray-800">Session &amp; Billing Thresholds</h3>
-                <p class="mt-1 text-sm text-gray-500">These values affect deposit confirmations, billing warnings, and the login screen.</p>
+            <div class="border-t border-slate-100 pt-8">
+                <h3 class="section-title">Session &amp; Billing Thresholds</h3>
+                <p class="section-subtitle">These values affect deposit confirmations, billing warnings, and the login screen.</p>
                 <div class="mt-4 grid gap-6 sm:grid-cols-2">
                     <div>
                         <x-input-label for="session_lifetime_minutes" :value="__('Session Lifetime (minutes)')" />
@@ -64,9 +61,9 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 border-t border-gray-100 pt-6">
-                <button type="submit" class="inline-flex items-center rounded-lg bg-hospital-700 px-4 py-2 text-sm font-medium text-white hover:bg-hospital-800">
-                    <i class="fa-solid fa-save mr-2"></i> Save Settings
+            <div class="panel-footer -mx-6 -mb-6 mt-6 flex items-center gap-3 px-6 py-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-save"></i> Save Settings
                 </button>
             </div>
         </form>

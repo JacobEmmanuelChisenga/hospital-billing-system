@@ -1,12 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800">Statement of Account</h2>
-                <p class="mt-1 text-sm text-gray-500">{{ $report['company']->name }} — Company account</p>
-            </div>
-            <a href="{{ route('reports.companies', request()->query()) }}" class="text-sm text-hospital-700 hover:underline no-print">&larr; Companies</a>
-        </div>
+        <x-page-header title="Statement of Account" subtitle="{{ $report['company']->name }} — Company account">
+            <x-slot name="actions">
+                <a href="{{ route('reports.companies', request()->query()) }}" class="btn-ghost no-print">&larr; Companies</a>
+            </x-slot>
+        </x-page-header>
     </x-slot>
 
     @include('reports.partials.filter-form', [
@@ -15,63 +13,51 @@
         'printButton' => true,
     ])
 
-    <div class="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm print-report">
-        <div class="text-center border-b border-gray-200 pb-4 mb-4">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ config('hospital.name') }}</p>
+    <div class="card card-body mt-6 print-report">
+        <div class="border-b border-slate-200 pb-4 mb-4 text-center">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ config('hospital.name') }}</p>
             <p class="text-lg font-bold">{{ config('hospital.section') }}</p>
             <p class="mt-2 text-base font-semibold">Company Statement of Account</p>
-            <p class="mt-1 text-sm text-gray-500">{{ $from->format('d M Y') }} — {{ $to->format('d M Y') }}</p>
+            <p class="section-subtitle mt-1">{{ $from->format('d M Y') }} — {{ $to->format('d M Y') }}</p>
         </div>
 
-        <dl class="grid gap-3 sm:grid-cols-2 text-sm mb-6">
-            <div><dt class="text-gray-500">Company</dt><dd class="font-medium">{{ $report['company']->name }}</dd></div>
-            <div><dt class="text-gray-500">Period</dt><dd class="font-medium">{{ $from->format('d M Y') }} — {{ $to->format('d M Y') }}</dd></div>
+        <dl class="mb-6 grid gap-3 sm:grid-cols-2 text-sm">
+            <div><dt class="text-slate-500">Company</dt><dd class="font-medium">{{ $report['company']->name }}</dd></div>
+            <div><dt class="text-slate-500">Period</dt><dd class="font-medium">{{ $from->format('d M Y') }} — {{ $to->format('d M Y') }}</dd></div>
         </dl>
 
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6 text-sm">
-            <div class="rounded-lg bg-gray-50 p-3">
-                <p class="text-gray-500">Opening Balance</p>
-                <p class="font-bold text-lg">K {{ number_format($report['opening_balance'], 2) }}</p>
-            </div>
-            <div class="rounded-lg bg-gray-50 p-3">
-                <p class="text-gray-500">Company Deposits</p>
-                <p class="font-bold text-lg text-green-700">K {{ number_format($report['deposits_in_period'], 2) }}</p>
-            </div>
-            <div class="rounded-lg bg-gray-50 p-3">
-                <p class="text-gray-500">Total Bills</p>
-                <p class="font-bold text-lg text-red-700">K {{ number_format($report['bills_in_period'], 2) }}</p>
-            </div>
-            <div class="rounded-lg border border-hospital-200 bg-hospital-50 p-3">
-                <p class="text-hospital-700">Closing Balance</p>
-                <p class="font-bold text-lg">K {{ number_format($report['closing_balance'], 2) }}</p>
-            </div>
+        <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+            <x-dashboard-kpi label="Opening Balance" :value="'K ' . number_format($report['opening_balance'], 2)" tone="slate" />
+            <x-dashboard-kpi label="Company Deposits" :value="'K ' . number_format($report['deposits_in_period'], 2)" tone="green" />
+            <x-dashboard-kpi label="Total Bills" :value="'K ' . number_format($report['bills_in_period'], 2)" tone="amber" />
+            <x-dashboard-kpi label="Closing Balance" :value="'K ' . number_format($report['closing_balance'], 2)" />
         </div>
 
-        <div class="table-scroll">
-            <table class="min-w-full text-sm">
+        <x-table-scroll>
+            <table class="data-table">
                 <thead>
-                    <tr class="border-b border-gray-200 text-left text-gray-500">
-                        <th class="pb-2 pr-3 font-medium">Date</th>
-                        <th class="pb-2 pr-3 font-medium">Reference</th>
-                        <th class="pb-2 pr-3 font-medium">Description</th>
-                        <th class="pb-2 pr-3 font-medium text-right">Debit</th>
-                        <th class="pb-2 pr-3 font-medium text-right">Credit</th>
-                        <th class="pb-2 font-medium text-right">Balance</th>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th class="text-right">Debit</th>
+                        <th class="text-right">Credit</th>
+                        <th class="text-right">Balance</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody>
                     @foreach ($report['lines'] as $line)
                         <tr @class(['font-medium' => $line['is_opening'] ?? false])>
-                            <td class="py-2 pr-3 whitespace-nowrap">{{ $line['date']->format('d M Y') }}</td>
-                            <td class="py-2 pr-3 text-gray-600">{{ $line['reference'] }}</td>
-                            <td class="py-2 pr-3">{{ $line['description'] }}</td>
-                            <td class="py-2 pr-3 text-right text-red-700">{{ $line['debit'] !== null ? number_format($line['debit'], 2) : '' }}</td>
-                            <td class="py-2 pr-3 text-right text-green-700">{{ $line['credit'] !== null ? number_format($line['credit'], 2) : '' }}</td>
-                            <td class="py-2 text-right font-medium">{{ number_format($line['balance'], 2) }}</td>
+                            <td class="whitespace-nowrap">{{ $line['date']->format('d M Y') }}</td>
+                            <td class="text-slate-600">{{ $line['reference'] }}</td>
+                            <td>{{ $line['description'] }}</td>
+                            <td class="text-right text-red-700">{{ $line['debit'] !== null ? number_format($line['debit'], 2) : '' }}</td>
+                            <td class="text-right text-emerald-700">{{ $line['credit'] !== null ? number_format($line['credit'], 2) : '' }}</td>
+                            <td class="text-right font-medium">{{ number_format($line['balance'], 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-        </div>
+        </x-table-scroll>
     </div>
 </x-app-layout>

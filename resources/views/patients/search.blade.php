@@ -1,45 +1,42 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">Patient Search</h2>
-            <p class="mt-1 text-sm text-gray-500">Find a patient by name, number, phone, or identifier.</p>
-        </div>
+        <x-page-header title="Patient Search" subtitle="Find a patient by name, number, phone, or identifier." />
     </x-slot>
 
     <x-flash-messages />
 
-    <div class="mb-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+    <x-filter-panel>
         <form method="GET" action="{{ route('patients.search') }}" class="flex flex-col gap-3 sm:flex-row">
             <div class="flex-1">
                 <label for="search" class="sr-only">Search</label>
                 <input type="text" id="search" name="search" value="{{ $search }}" autofocus
                     placeholder="Name, patient no., membership no., NRC, MAN number, phone..."
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-500 focus:ring-hospital-500">
+                    class="form-input">
             </div>
-            <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg bg-hospital-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-hospital-800 sm:w-auto">
-                <i class="fa-solid fa-magnifying-glass mr-2"></i> Search
+            <button type="submit" class="btn-primary sm:w-auto">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
             </button>
         </form>
-    </div>
+    </x-filter-panel>
 
     @if ($search !== '')
-        <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+        <x-data-panel>
             <x-table-scroll>
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Name</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Type</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Identifier</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-600">Actions</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Identifier</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody>
                         @forelse ($patients as $patient)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium">{{ $patient->name }}</td>
-                                <td class="px-4 py-3">{{ $patient->type->label() }}</td>
-                                <td class="px-4 py-3">
+                            <tr>
+                                <td class="font-medium">{{ $patient->name }}</td>
+                                <td>{{ $patient->type->label() }}</td>
+                                <td>
                                     @if ($patient->isMember())
                                         {{ $patient->membership?->membership_number ?? 'Pending' }}
                                     @elseif ($patient->isCompanyPatient())
@@ -48,13 +45,13 @@
                                         {{ $patient->principalMember?->name ?? '—' }}
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('patients.show', $patient) }}" class="text-hospital-700 hover:underline">View profile</a>
+                                <td class="text-right">
+                                    <a href="{{ route('patients.show', $patient) }}" class="action-link">View profile</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-12 text-center text-gray-500">No patients match your search.</td>
+                                <td colspan="4" class="!py-12 text-center text-slate-500">No patients match your search.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -62,10 +59,10 @@
             </x-table-scroll>
 
             @if ($patients->hasPages())
-                <div class="border-t border-gray-100 px-4 py-3">{{ $patients->links() }}</div>
+                <x-slot name="footer">{{ $patients->links() }}</x-slot>
             @endif
-        </div>
+        </x-data-panel>
     @else
-        <p class="text-sm text-gray-500">Enter a search term to find patients.</p>
+        <p class="text-sm text-slate-500">Enter a search term to find patients.</p>
     @endif
 </x-app-layout>
