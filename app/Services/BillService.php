@@ -20,6 +20,10 @@ use InvalidArgumentException;
  */
 class BillService
 {
+    public function __construct(
+        private LedgerService $ledgerService,
+    ) {}
+
     /**
      * Sum itemised charge fields into a bill total.
      */
@@ -95,6 +99,9 @@ class BillService
                 'created_by' => $user->id,
             ]);
 
+            $bill = $bill->load(['patient', 'accountPatient', 'company', 'createdBy']);
+            $this->ledgerService->recordBill($bill, $user);
+
             AuditLogger::log(
                 AuditActionType::BillCreated,
                 "Posted K {$total} bill for {$lockedPatient->name} ({$data['visit_type']}).",
@@ -102,7 +109,7 @@ class BillService
                 ['patient_id' => $lockedPatient->id, 'total' => $total],
             );
 
-            return $bill->load(['patient', 'accountPatient', 'company', 'createdBy']);
+            return $bill;
         });
     }
 
@@ -134,16 +141,19 @@ class BillService
                 'voided_by' => $user->id,
             ]);
 
-            $patientName = Patient::query()->find($lockedBill->patient_id)?->name ?? 'Unknown patient';
+            $voided = $lockedBill->fresh(['patient', 'accountPatient', 'company', 'createdBy', 'voidedBy']);
+            $this->ledgerService->recordBillVoid($voided, $user, $reason);
+
+            $patientName = $voided->patient?->name ?? 'Unknown patient';
 
             AuditLogger::log(
                 AuditActionType::BillVoided,
-                "Voided K {$lockedBill->total_amount} bill for {$patientName}. Reason: {$reason}",
-                $lockedBill,
-                ['bill_id' => $lockedBill->id, 'total' => $lockedBill->total_amount],
+                "Voided K {$voided->total_amount} bill for {$patientName}. Reason: {$reason}",
+                $voided,
+                ['bill_id' => $voided->id, 'total' => $voided->total_amount],
             );
 
-            return $lockedBill->fresh(['patient', 'accountPatient', 'company', 'createdBy', 'voidedBy']);
+            return $voided;
         });
     }
 }

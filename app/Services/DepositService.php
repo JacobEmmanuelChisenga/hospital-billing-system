@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\AuditActionType;
-use App\Enums\VisitStatus;
 use App\Models\Deposit;
 use App\Models\Patient;
 use App\Models\User;
@@ -18,6 +17,11 @@ use InvalidArgumentException;
  */
 class DepositService
 {
+    public function __construct(
+        private VisitService $visitService,
+        private LedgerService $ledgerService,
+    ) {}
+
     public function record(Patient $patient, array $data, User $user): Deposit
     {
         if (! $patient->isMember()) {
@@ -39,14 +43,10 @@ class DepositService
 
             $lockedPatient->increment('balance', $data['amount']);
 
-            $lockedPatient->visits()
-                ->where('status', VisitStatus::AwaitingPayment->value)
-                ->update(['status' => VisitStatus::ReadyForConsultation->value]);
+            $deposit = $deposit->load(['patient', 'createdBy']);
+            $this->ledgerService->recordMemberDeposit($deposit, $user);
 
-            $lockedPatient->dependants()
-                ->each(fn (Patient $dependant) => $dependant->visits()
-                    ->where('status', VisitStatus::AwaitingPayment->value)
-                    ->update(['status' => VisitStatus::ReadyForConsultation->value]));
+            $this->visitService->releaseCoveredVisitsForAccount($lockedPatient->fresh(['membership']));
 
             AuditLogger::log(
                 AuditActionType::DepositCreated,
@@ -82,14 +82,17 @@ class DepositService
 
             $lockedPatient->decrement('balance', (float) $lockedDeposit->amount);
 
+            $reversed = $lockedDeposit->fresh(['patient', 'createdBy', 'reversedBy']);
+            $this->ledgerService->recordMemberDepositReversal($reversed, $user, $reason);
+
             AuditLogger::log(
                 AuditActionType::DepositReversed,
-                "Reversed K {$lockedDeposit->amount} deposit for {$lockedPatient->name}. Reason: {$reason}",
-                $lockedDeposit,
-                ['patient_id' => $lockedPatient->id, 'amount' => $lockedDeposit->amount],
+                "Reversed K {$reversed->amount} deposit for {$lockedPatient->name}. Reason: {$reason}",
+                $reversed,
+                ['patient_id' => $lockedPatient->id, 'amount' => $reversed->amount],
             );
 
-            return $lockedDeposit->fresh(['patient', 'createdBy', 'reversedBy']);
+            return $reversed;
         });
     }
 }

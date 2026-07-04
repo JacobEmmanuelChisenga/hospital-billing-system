@@ -87,6 +87,10 @@ class VisitController extends Controller
     {
         $visit->load(['patient.company', 'patient.membership', 'patient.principalMember.membership', 'chargeLines.billableService', 'chargeLines.recordedBy', 'clinicalNote.recordedBy', 'bill', 'openedBy']);
 
+        // Dependant visits can be stuck on Awaiting Payment even when the
+        // principal already has active membership and balance — release them.
+        $visit = $this->visitService->releaseIfPaymentSatisfied($visit);
+
         return view('visits.show', [
             'visit' => $visit,
             'billableServices' => BillableService::query()

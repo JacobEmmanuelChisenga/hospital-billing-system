@@ -18,6 +18,10 @@ use InvalidArgumentException;
  */
 class CompanyDepositService
 {
+    public function __construct(
+        private LedgerService $ledgerService,
+    ) {}
+
     public function record(Company $company, array $data, User $user): CompanyDeposit
     {
         return DB::transaction(function () use ($company, $data, $user): CompanyDeposit {
@@ -33,6 +37,9 @@ class CompanyDepositService
             ]);
 
             $lockedCompany->increment('balance', $data['amount']);
+
+            $deposit = $deposit->load(['company', 'createdBy']);
+            $this->ledgerService->recordCompanyDeposit($deposit, $user);
 
             $lockedCompany->patients()
                 ->each(fn (Patient $patient) => $patient->visits()
@@ -73,14 +80,17 @@ class CompanyDepositService
 
             $lockedCompany->decrement('balance', (float) $lockedDeposit->amount);
 
+            $reversed = $lockedDeposit->fresh(['company', 'createdBy', 'reversedBy']);
+            $this->ledgerService->recordCompanyDepositReversal($reversed, $user, $reason);
+
             AuditLogger::log(
                 AuditActionType::CompanyDepositReversed,
-                "Reversed K {$lockedDeposit->amount} from {$lockedCompany->name}. Reason: {$reason}",
-                $lockedDeposit,
-                ['company_id' => $lockedCompany->id, 'amount' => $lockedDeposit->amount],
+                "Reversed K {$reversed->amount} from {$lockedCompany->name}. Reason: {$reason}",
+                $reversed,
+                ['company_id' => $lockedCompany->id, 'amount' => $reversed->amount],
             );
 
-            return $lockedDeposit->fresh(['company', 'createdBy', 'reversedBy']);
+            return $reversed;
         });
     }
 }

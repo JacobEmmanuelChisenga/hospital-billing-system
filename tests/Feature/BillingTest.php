@@ -102,6 +102,68 @@ class BillingTest extends TestCase
         $this->assertSame($principal->id, Bill::query()->first()->account_patient_id);
     }
 
+    public function test_dependant_visit_is_ready_when_principal_membership_is_active_and_funded(): void
+    {
+        $user = User::factory()->registry()->create();
+        $principal = Patient::factory()->member()->create([
+            'balance' => 48550,
+            'membership_status' => MembershipStatus::Active,
+            'membership_valid_until' => now()->addYear(),
+        ]);
+        // Dependant's own membership fee may still be pending — coverage is via principal.
+        $dependant = Patient::factory()->dependant($principal)->create([
+            'membership_status' => MembershipStatus::PendingPayment,
+            'membership_valid_until' => null,
+        ]);
+
+        $visit = $this->openVisit($user, $dependant, VisitType::Ipd, 'Ward 2 / Bed 4');
+
+        $this->assertSame(VisitStatus::ReadyForConsultation, $visit->status);
+    }
+
+    public function test_stuck_dependant_visit_is_released_when_principal_already_covers_care(): void
+    {
+        $user = User::factory()->registry()->create();
+        $principal = Patient::factory()->member()->create([
+            'balance' => 48550,
+            'membership_status' => MembershipStatus::Active,
+            'membership_valid_until' => now()->addYear(),
+        ]);
+        $dependant = Patient::factory()->dependant($principal)->create([
+            'membership_status' => MembershipStatus::PendingPayment,
+        ]);
+
+        $visit = Visit::query()->create([
+            'patient_id' => $dependant->id,
+            'visit_date' => now()->toDateString(),
+            'visit_type' => VisitType::Ipd,
+            'status' => VisitStatus::AwaitingPayment,
+            'opened_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('visits.show', $visit))
+            ->assertOk()
+            ->assertSee('Ready for Consultation');
+
+        $this->assertSame(VisitStatus::ReadyForConsultation, $visit->fresh()->status);
+    }
+
+    public function test_dependant_visit_awaits_payment_when_principal_membership_is_pending(): void
+    {
+        $user = User::factory()->registry()->create();
+        $principal = Patient::factory()->member()->create([
+            'balance' => 5000,
+            'membership_status' => MembershipStatus::PendingPayment,
+            'membership_valid_until' => null,
+        ]);
+        $dependant = Patient::factory()->dependant($principal)->create();
+
+        $visit = $this->openVisit($user, $dependant);
+
+        $this->assertSame(VisitStatus::AwaitingPayment, $visit->status);
+    }
+
     public function test_company_patient_visit_bill_deducts_company_pool(): void
     {
         $user = User::factory()->registry()->create();
@@ -172,6 +234,51 @@ class BillingTest extends TestCase
             ->get(route('billing.receipt', $bill))
             ->assertOk()
             ->assertSee('OFFICIAL RECEIPT');
+    }
+
+    public function test_member_receipt_shows_remaining_balance(): void
+    {
+        $user = User::factory()->registry()->create();
+        $member = Patient::factory()->member()->create([
+            'balance' => 5000,
+            'membership_status' => MembershipStatus::Active,
+            'membership_valid_until' => now()->addYear(),
+        ]);
+
+        $visit = $this->openVisit($user, $member);
+        $this->recordClinicalNotes($visit);
+        $this->addServiceCharge($user, $visit, 'Consultation');
+        $this->actingAs($user)->post(route('visits.post-bill', $visit));
+
+        $bill = Bill::query()->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('billing.receipt', $bill))
+            ->assertOk()
+            ->assertSee('Remaining Balance')
+            ->assertSee('K '.number_format((float) $member->fresh()->balance, 2));
+    }
+
+    public function test_company_patient_receipt_hides_company_balance(): void
+    {
+        $user = User::factory()->registry()->create();
+        $company = Company::factory()->create(['balance' => 20000, 'name' => 'Acme Mining']);
+        $patient = Patient::factory()->companyPatient($company)->create();
+
+        $visit = $this->openVisit($user, $patient, VisitType::Ipd, 'Ward 1 / Bed 2');
+        $this->recordClinicalNotes($visit);
+        $this->addServiceCharge($user, $visit, 'Consultation');
+        $this->actingAs($user)->post(route('visits.post-bill', $visit));
+
+        $bill = Bill::query()->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('billing.receipt', $bill))
+            ->assertOk()
+            ->assertSee('OFFICIAL RECEIPT')
+            ->assertSee('Acme Mining')
+            ->assertDontSee('Remaining Balance')
+            ->assertDontSee('K 19,850.00');
     }
 
     public function test_nurse_can_record_clinical_notes_on_open_visit(): void

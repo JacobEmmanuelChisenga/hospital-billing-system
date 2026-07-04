@@ -20,6 +20,10 @@ use Illuminate\Support\Collection;
  */
 class ReportService
 {
+    public function __construct(
+        private LedgerService $ledgerService,
+    ) {}
+
     /**
      * Resolve a date range from quick presets or custom from/to fields.
      *
@@ -309,98 +313,77 @@ class ReportService
             ->map(fn (Company $company) => $this->companySummary($company, $from, $to));
     }
 
-    /** Single company report data. */
+    /** Single company report — bank-style ledger statement. */
     public function companySummary(Company $company, Carbon $from, Carbon $to): array
     {
-        $depositsInPeriod = (float) CompanyDeposit::query()
-            ->active()
-            ->where('company_id', $company->id)
-            ->whereDate('deposit_date', '>=', $from)
-            ->whereDate('deposit_date', '<=', $to)
-            ->sum('amount');
-
-        $billsInPeriod = (float) Bill::query()
-            ->posted()
-            ->where('company_id', $company->id)
-            ->whereDate('visit_date', '>=', $from)
-            ->whereDate('visit_date', '<=', $to)
-            ->sum('total_amount');
-
-        $bills = Bill::query()
-            ->with(['patient'])
-            ->where('company_id', $company->id)
-            ->whereDate('visit_date', '>=', $from)
-            ->whereDate('visit_date', '<=', $to)
-            ->orderByDesc('visit_date')
-            ->get();
+        $statement = $this->ledgerService->companyStatement($company, $from, $to);
 
         return [
             'company' => $company,
             'current_balance' => (float) $company->balance,
-            'deposits_in_period' => $depositsInPeriod,
-            'bills_in_period' => $billsInPeriod,
-            'bills' => $bills,
+            'opening_balance' => $statement['opening_balance'],
+            'closing_balance' => $statement['closing_balance'],
+            'deposits_in_period' => $statement['deposits_total'],
+            'bills_in_period' => $statement['bills_total'],
+            'lines' => $statement['lines'],
+            'membership_number' => null,
         ];
     }
 
     /**
-     * Patient statement — visits, deposits, and payer balance for a date range.
+     * Patient / member statement — bank-style ledger for the billable account.
+     * Dependants use the principal member ledger.
      */
     public function patientStatement(Patient $patient, Carbon $from, Carbon $to): array
     {
-        $patient->load(['company', 'principalMember']);
+        $patient->load(['company', 'principalMember.membership', 'membership']);
 
-        $lines = collect();
+        if ($patient->isCompanyPatient()) {
+            $company = $patient->company;
+            $statement = $company
+                ? $this->ledgerService->companyStatement($company, $from, $to)
+                : [
+                    'opening_balance' => 0.0,
+                    'closing_balance' => 0.0,
+                    'deposits_total' => 0.0,
+                    'bills_total' => 0.0,
+                    'lines' => collect(),
+                    'membership_number' => null,
+                    'account_name' => $patient->name,
+                ];
 
-        if ($patient->isMember()) {
-            Deposit::query()
-                ->where('patient_id', $patient->id)
-                ->whereDate('deposit_date', '>=', $from)
-                ->whereDate('deposit_date', '<=', $to)
-                ->orderBy('deposit_date')
-                ->each(function (Deposit $deposit) use ($lines): void {
-                    $lines->push([
-                        'date' => $deposit->deposit_date,
-                        'description' => 'Deposit'.($deposit->reference ? " ({$deposit->reference})" : ''),
-                        'debit' => 0,
-                        'credit' => (float) $deposit->amount,
-                        'status' => $deposit->isReversed() ? 'Reversed' : 'Posted',
-                    ]);
-                });
+            // Company patient statements show only this patient's bill lines on the pool.
+            $lines = $statement['lines']->filter(function (array $line) use ($patient): bool {
+                if ($line['is_opening'] ?? false) {
+                    return true;
+                }
+
+                return str_contains((string) $line['description'], $patient->name);
+            })->values();
+
+            return [
+                'patient' => $patient,
+                'payer_label' => $patient->effectiveBalanceOwnerLabel(),
+                'membership_number' => null,
+                'opening_balance' => $statement['opening_balance'],
+                'closing_balance' => $statement['closing_balance'],
+                'deposits_total' => $statement['deposits_total'],
+                'bills_total' => $statement['bills_total'],
+                'lines' => $lines,
+            ];
         }
 
-        Bill::query()
-            ->where('patient_id', $patient->id)
-            ->whereDate('visit_date', '>=', $from)
-            ->whereDate('visit_date', '<=', $to)
-            ->orderBy('visit_date')
-            ->each(function (Bill $bill) use ($lines): void {
-                $lines->push([
-                    'date' => $bill->visit_date,
-                    'description' => $bill->visit_type->label().' visit — BILL-'.$bill->id,
-                    'debit' => $bill->status === BillStatus::Posted ? (float) $bill->total_amount : 0,
-                    'credit' => 0,
-                    'status' => $bill->status->label(),
-                ]);
-            });
-
-        $lines = $lines->sortBy('date')->values();
-
-        $payerAccount = $patient->billableAccountPatient();
-        $payerBalance = (float) $patient->effectiveBalance();
-
-        $depositsTotal = (float) $lines->sum('credit');
-        $billsTotal = (float) $lines->sum('debit');
-        $openingBalance = $payerBalance - $depositsTotal + $billsTotal;
+        $statement = $this->ledgerService->memberStatement($patient, $from, $to);
 
         return [
             'patient' => $patient,
-            'payer_label' => $patient->effectiveBalanceOwnerLabel(),
-            'opening_balance' => $openingBalance,
-            'closing_balance' => $payerBalance,
-            'deposits_total' => $depositsTotal,
-            'bills_total' => $billsTotal,
-            'lines' => $lines,
+            'payer_label' => $statement['payer_label'] ?? $patient->effectiveBalanceOwnerLabel(),
+            'membership_number' => $statement['membership_number'],
+            'opening_balance' => $statement['opening_balance'],
+            'closing_balance' => $statement['closing_balance'],
+            'deposits_total' => $statement['deposits_total'],
+            'bills_total' => $statement['bills_total'],
+            'lines' => $statement['lines'],
         ];
     }
 }

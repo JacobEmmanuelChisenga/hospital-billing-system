@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\AuditActionType;
-use App\Enums\MembershipStatus;
 use App\Enums\PatientStatus;
 use App\Enums\VisitStatus;
 use App\Enums\VisitType;
@@ -34,6 +33,10 @@ class VisitService
         if ($patient->status !== PatientStatus::Active) {
             throw new InvalidArgumentException('Cannot open a visit for an inactive patient.');
         }
+
+        // Dependants are funded by their principal — load that account before
+        // deciding whether payment is still outstanding.
+        $patient->loadMissing(['principalMember.membership', 'membership', 'company']);
 
         $visit = Visit::query()->create([
             'patient_id' => $patient->id,
@@ -193,6 +196,57 @@ class VisitService
         return $totals;
     }
 
+    /**
+     * Move a visit out of Awaiting Payment when coverage is already satisfied
+     * (e.g. dependant covered by an active principal with balance).
+     */
+    public function releaseIfPaymentSatisfied(Visit $visit): Visit
+    {
+        if ($visit->status !== VisitStatus::AwaitingPayment) {
+            return $visit;
+        }
+
+        $visit->loadMissing(['patient.principalMember.membership', 'patient.membership', 'patient.company']);
+
+        if ($this->requiresPaymentBeforeConsultation($visit->patient)) {
+            return $visit;
+        }
+
+        $visit->update(['status' => VisitStatus::ReadyForConsultation]);
+
+        return $visit->fresh([
+            'patient.principalMember.membership',
+            'patient.membership',
+            'patient.company',
+            'chargeLines.billableService',
+            'chargeLines.recordedBy',
+            'clinicalNote.recordedBy',
+            'bill',
+            'openedBy',
+        ]);
+    }
+
+    /**
+     * Release every open Awaiting Payment visit funded by this member account,
+     * including visits for their dependants.
+     */
+    public function releaseCoveredVisitsForAccount(Patient $account): void
+    {
+        if (! $account->isMember()) {
+            return;
+        }
+
+        $account->loadMissing('membership');
+
+        $patientIds = $account->dependants()->pluck('id')->push($account->id);
+
+        Visit::query()
+            ->whereIn('patient_id', $patientIds)
+            ->where('status', VisitStatus::AwaitingPayment)
+            ->get()
+            ->each(fn (Visit $visit) => $this->releaseIfPaymentSatisfied($visit));
+    }
+
     private function initialStatus(Patient $patient): VisitStatus
     {
         if ($this->requiresPaymentBeforeConsultation($patient)) {
@@ -202,21 +256,31 @@ class VisitService
         return VisitStatus::ReadyForConsultation;
     }
 
+    /**
+     * Whether the visit must wait for Accounts before the nurse can see the patient.
+     *
+     * Members and dependants are evaluated on the billable account (principal for
+     * dependants). A dependant's own pending membership fee does not block care
+     * when the principal membership is active and funded.
+     */
     private function requiresPaymentBeforeConsultation(Patient $patient): bool
     {
         if ($patient->isCompanyPatient()) {
             return (float) $patient->effectiveBalance() <= 0;
         }
 
-        // Members pay from their own account; dependants are covered by their
-        // principal member. Evaluate the account that actually funds the visit.
         $account = $patient->billableAccountPatient();
 
         if (! $account) {
             return true;
         }
 
-        return $account->membershipStanding() === MembershipStatus::PendingPayment
-            || (float) $patient->effectiveBalance() <= 0;
+        $account->loadMissing('membership');
+
+        if (! $account->membershipIsActive()) {
+            return true;
+        }
+
+        return (float) $patient->effectiveBalance() <= 0;
     }
 }

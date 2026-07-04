@@ -271,18 +271,19 @@ class ReportController extends Controller
         $range = $this->reportService->resolveDateRange($request);
         $report = $this->reportService->companySummary($company, $range['from'], $range['to']);
 
-        $rows = $report['bills']->map(fn ($bill) => [
-            $bill->visit_date->format('Y-m-d'),
-            $bill->patient->name,
-            $bill->visit_type->label(),
-            $bill->total_amount,
-            $bill->status->label(),
+        $rows = $report['lines']->map(fn (array $line) => [
+            $line['date']->format('Y-m-d'),
+            $line['reference'],
+            $line['description'],
+            $line['debit'] ?? '',
+            $line['credit'] ?? '',
+            $line['balance'],
         ]);
 
-        $filename = 'company-'.str($company->name)->slug().'-'.$range['from']->format('Y-m-d').'.csv';
+        $filename = 'company-statement-'.str($company->name)->slug().'-'.$range['from']->format('Y-m-d').'.csv';
 
         return CsvExporter::download($filename, [
-            'Date', 'Patient', 'Visit Type', 'Amount (K)', 'Status',
+            'Date', 'Reference', 'Description', 'Debit (K)', 'Credit (K)', 'Balance (K)',
         ], $rows);
     }
 
@@ -307,16 +308,17 @@ class ReportController extends Controller
 
         $rows = $statement['lines']->map(fn (array $line) => [
             $line['date']->format('Y-m-d'),
+            $line['reference'],
             $line['description'],
-            $line['debit'] ?: '',
-            $line['credit'] ?: '',
-            $line['status'],
+            $line['debit'] ?? '',
+            $line['credit'] ?? '',
+            $line['balance'],
         ]);
 
         $filename = 'statement-'.str($patient->name)->slug().'-'.$range['from']->format('Y-m-d').'.csv';
 
         return CsvExporter::download($filename, [
-            'Date', 'Description', 'Debit (K)', 'Credit (K)', 'Status',
+            'Date', 'Reference', 'Description', 'Debit (K)', 'Credit (K)', 'Balance (K)',
         ], $rows);
     }
 

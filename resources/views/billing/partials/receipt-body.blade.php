@@ -76,12 +76,15 @@
     </tfoot>
 </table>
 
-<div class="border-t border-gray-200 pt-3 text-sm">
-    <div class="flex justify-between">
-        <span class="text-gray-500">Remaining Balance</span>
-        <span class="font-medium">K {{ number_format($bill->payerBalanceAfter(), 2) }}</span>
+{{-- Company pool balances stay internal — only member/dependant receipts show remaining balance. --}}
+@if (! $bill->company_id)
+    <div class="border-t border-gray-200 pt-3 text-sm">
+        <div class="flex justify-between">
+            <span class="text-gray-500">Remaining Balance</span>
+            <span class="font-medium">K {{ number_format($bill->payerBalanceAfter(), 2) }}</span>
+        </div>
     </div>
-</div>
+@endif
 
 @if ($bill->notes)
     <p class="mt-4 text-xs text-gray-500">Notes: {{ $bill->notes }}</p>

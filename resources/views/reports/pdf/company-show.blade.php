@@ -1,38 +1,40 @@
 @extends('reports.pdf.layout', [
-    'title' => $report['company']->name,
-    'subtitle' => 'Company account usage report',
+    'title' => 'Company Statement of Account',
+    'subtitle' => $report['company']->name,
 ])
 
 @section('content')
     <table class="grid">
-        <tr><td class="label">Pool Balance</td><td>K {{ number_format($report['current_balance'], 2) }}</td></tr>
-        <tr><td class="label">Deposits in Period</td><td>K {{ number_format($report['deposits_in_period'], 2) }}</td></tr>
-        <tr><td class="label">Bills in Period</td><td>K {{ number_format($report['bills_in_period'], 2) }}</td></tr>
+        <tr><td class="label">Company</td><td>{{ $report['company']->name }}</td></tr>
+        <tr><td class="label">Opening Balance</td><td>K {{ number_format($report['opening_balance'], 2) }}</td></tr>
+        <tr><td class="label">Company Deposits</td><td>K {{ number_format($report['deposits_in_period'], 2) }}</td></tr>
+        <tr><td class="label">Total Bills</td><td>K {{ number_format($report['bills_in_period'], 2) }}</td></tr>
+        <tr><td class="label">Closing Balance</td><td>K {{ number_format($report['closing_balance'], 2) }}</td></tr>
     </table>
 
-    <h2>Bills in Period</h2>
+    <h2>Transactions</h2>
     <table class="data">
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Patient</th>
-                <th>Visit</th>
-                <th>Amount (K)</th>
-                <th>Status</th>
+                <th>Reference</th>
+                <th>Description</th>
+                <th>Debit (K)</th>
+                <th>Credit (K)</th>
+                <th>Balance (K)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($report['bills'] as $bill)
+            @foreach ($report['lines'] as $line)
                 <tr>
-                    <td>{{ $bill->visit_date->format('d M Y') }}</td>
-                    <td>{{ $bill->patient->name }}</td>
-                    <td>{{ $bill->visit_type->label() }}</td>
-                    <td class="num">{{ number_format((float) $bill->total_amount, 2) }}</td>
-                    <td>{{ $bill->status->label() }}</td>
+                    <td>{{ $line['date']->format('d M Y') }}</td>
+                    <td>{{ $line['reference'] }}</td>
+                    <td>{{ $line['description'] }}</td>
+                    <td class="num">{{ $line['debit'] !== null ? number_format($line['debit'], 2) : '' }}</td>
+                    <td class="num">{{ $line['credit'] !== null ? number_format($line['credit'], 2) : '' }}</td>
+                    <td class="num">{{ number_format($line['balance'], 2) }}</td>
                 </tr>
-            @empty
-                <tr><td colspan="5">No bills in this period.</td></tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
 @endsection

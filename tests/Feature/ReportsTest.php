@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\Deposit;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\LedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -99,16 +100,25 @@ class ReportsTest extends TestCase
             'visit_type' => VisitType::Opd,
             'total_amount' => 250,
             'consultation_amount' => 250,
+            'pharmacy_amount' => 0,
+            'lab_amount' => 0,
+            'ward_amount' => 0,
+            'other_amount' => 0,
             'status' => BillStatus::Posted,
             'created_by' => User::factory()->nursing()->create()->id,
         ]);
 
+        app(LedgerService::class)->rebuild();
+
         $this->actingAs($user)
             ->get(route('reports.patient-statement', ['patient' => $member, 'preset' => 'today']))
             ->assertOk()
+            ->assertSee('Statement of Account')
             ->assertSee('Statement Patient')
+            ->assertSee('Opening Balance')
+            ->assertSee('Closing Balance')
             ->assertSee('Deposit')
-            ->assertSee('OPD visit');
+            ->assertSee('Consultation');
     }
 
     public function test_transactions_csv_export_downloads(): void
@@ -165,17 +175,27 @@ class ReportsTest extends TestCase
         Bill::factory()->create([
             'patient_id' => $patient->id,
             'company_id' => $company->id,
+            'account_patient_id' => null,
             'visit_date' => today(),
             'total_amount' => 500,
             'consultation_amount' => 500,
+            'pharmacy_amount' => 0,
+            'lab_amount' => 0,
+            'ward_amount' => 0,
+            'other_amount' => 0,
             'status' => BillStatus::Posted,
             'created_by' => User::factory()->nursing()->create()->id,
         ]);
 
+        app(LedgerService::class)->rebuild();
+
         $this->actingAs($user)
             ->get(route('reports.companies.show', ['company' => $company, 'preset' => 'today']))
             ->assertOk()
+            ->assertSee('Statement of Account')
             ->assertSee('Test Corp')
-            ->assertSee($patient->name);
+            ->assertSee($patient->name)
+            ->assertSee('Opening Balance')
+            ->assertSee('Closing Balance');
     }
 }

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\AuditActionType;
 use App\Enums\MembershipStatus;
-use App\Enums\VisitStatus;
 use App\Models\Membership;
 use App\Models\MembershipFee;
 use App\Models\Patient;
@@ -20,6 +19,10 @@ use Illuminate\Support\Facades\DB;
  */
 class MembershipFeeService
 {
+    public function __construct(
+        private VisitService $visitService,
+    ) {}
+
     /**
      * Record a membership payment for a holder (member or dependant).
      */
@@ -43,6 +46,12 @@ class MembershipFeeService
             ]);
 
             $this->extendMembership($holder, $data['expiry_date']);
+
+            // Principal membership covers dependants — release their waiting visits too.
+            $account = $holder->isMember() ? $holder : $principal;
+            if ($account) {
+                $this->visitService->releaseCoveredVisitsForAccount($account->fresh(['membership']));
+            }
 
             AuditLogger::log(
                 AuditActionType::MembershipFeeRecorded,
@@ -92,9 +101,5 @@ class MembershipFeeService
                 ],
             );
         }
-
-        $holder->visits()
-            ->where('status', VisitStatus::AwaitingPayment->value)
-            ->update(['status' => VisitStatus::ReadyForConsultation->value]);
     }
 }

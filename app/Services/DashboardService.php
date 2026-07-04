@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AuditActionType;
+use App\Enums\LedgerAccountType;
 use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Enums\VisitStatus;
@@ -187,42 +188,29 @@ class DashboardService
     {
         $today = today();
         $yesterday = today()->subDay();
+        $ledger = app(LedgerService::class);
 
-        $depositsToday = (float) Deposit::query()->active()->whereDate('deposit_date', $today)->sum('amount');
-        $companyDepositsToday = (float) CompanyDeposit::query()->active()->whereDate('deposit_date', $today)->sum('amount');
+        $memberDepositsToday = $ledger->totalCreditsToday(LedgerAccountType::Member);
+        $companyDepositsToday = $ledger->totalCreditsToday(LedgerAccountType::Company);
+        $totalDepositsToday = $memberDepositsToday + $companyDepositsToday;
+
+        $memberBillsToday = $ledger->totalDebitsToday(LedgerAccountType::Member);
+        $companyBillsToday = $ledger->totalDebitsToday(LedgerAccountType::Company);
+        $billsToday = $memberBillsToday + $companyBillsToday;
         $membershipToday = (float) MembershipFee::query()->whereDate('payment_date', $today)->sum('amount');
-        $billsToday = (float) Bill::query()->posted()->whereDate('visit_date', $today)->sum('total_amount');
-        $totalDepositsToday = $depositsToday + $companyDepositsToday;
-        $totalRevenueToday = $totalDepositsToday + $membershipToday + $billsToday;
 
         $depositsYesterday = (float) Deposit::query()->active()->whereDate('deposit_date', $yesterday)->sum('amount')
             + (float) CompanyDeposit::query()->active()->whereDate('deposit_date', $yesterday)->sum('amount');
-        $membershipYesterday = (float) MembershipFee::query()->whereDate('payment_date', $yesterday)->sum('amount');
         $billsYesterday = (float) Bill::query()->posted()->whereDate('visit_date', $yesterday)->sum('total_amount');
-        $totalRevenueYesterday = $depositsYesterday + $membershipYesterday + $billsYesterday;
 
-        $receiptsToday = Bill::query()->posted()->whereDate('visit_date', $today)->count()
-            + Deposit::query()->active()->whereDate('deposit_date', $today)->count()
-            + CompanyDeposit::query()->active()->whereDate('deposit_date', $today)->count()
-            + MembershipFee::query()->whereDate('payment_date', $today)->count();
-        $receiptsYesterday = Bill::query()->posted()->whereDate('visit_date', $yesterday)->count()
-            + Deposit::query()->active()->whereDate('deposit_date', $yesterday)->count()
-            + CompanyDeposit::query()->active()->whereDate('deposit_date', $yesterday)->count()
-            + MembershipFee::query()->whereDate('payment_date', $yesterday)->count();
+        $memberBalances = $ledger->totalCurrentBalances(LedgerAccountType::Member);
+        $companyBalances = $ledger->totalCurrentBalances(LedgerAccountType::Company);
 
         return [
             'theme' => 'accounts',
             'kpis' => [
                 [
-                    'label' => 'Total Revenue Today',
-                    'value' => 'K '.number_format($totalRevenueToday, 0),
-                    'tone' => 'purple',
-                    'trend' => $this->trendDirection($totalRevenueToday, $totalRevenueYesterday),
-                    'trendLabel' => $this->trendLabel($totalRevenueToday, $totalRevenueYesterday),
-                    'href' => route('reports.index'),
-                ],
-                [
-                    'label' => 'Total Deposits Today',
+                    'label' => "Today's Deposits",
                     'value' => 'K '.number_format($totalDepositsToday, 0),
                     'tone' => 'green',
                     'trend' => $this->trendDirection($totalDepositsToday, $depositsYesterday),
@@ -230,7 +218,7 @@ class DashboardService
                     'href' => route('deposits.index'),
                 ],
                 [
-                    'label' => 'Total Billing Today',
+                    'label' => "Today's Billing",
                     'value' => 'K '.number_format($billsToday, 0),
                     'tone' => 'blue',
                     'trend' => $this->trendDirection($billsToday, $billsYesterday),
@@ -238,12 +226,16 @@ class DashboardService
                     'href' => route('billing.index'),
                 ],
                 [
-                    'label' => 'Receipts Issued Today',
-                    'value' => number_format($receiptsToday),
+                    'label' => 'Current Member Balances',
+                    'value' => 'K '.number_format($memberBalances, 0),
+                    'tone' => 'purple',
+                    'href' => route('reports.member-accounts'),
+                ],
+                [
+                    'label' => 'Current Company Balances',
+                    'value' => 'K '.number_format($companyBalances, 0),
                     'tone' => 'orange',
-                    'trend' => $this->trendDirection($receiptsToday, $receiptsYesterday),
-                    'trendLabel' => $this->trendLabel($receiptsToday, $receiptsYesterday),
-                    'href' => route('billing.index'),
+                    'href' => route('reports.companies'),
                 ],
             ],
             'charts' => [
