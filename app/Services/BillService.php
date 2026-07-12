@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Enums\AuditActionType;
 use App\Enums\BillStatus;
 use App\Enums\PatientStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\VisitStatus;
 use App\Models\Bill;
 use App\Models\Company;
 use App\Models\Patient;
 use App\Models\User;
+use App\Models\Visit;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -16,7 +19,8 @@ use InvalidArgumentException;
  * Posts visit bills and voids them with correct balance adjustments.
  *
  * Members are charged on their own account. Dependants charge the principal
- * member. Company patients charge the company deposit pool.
+ * member. Company patients charge the company deposit pool. Casual callers
+ * receive an invoice and must pay immediately at Accounts.
  */
 class BillService
 {
@@ -60,7 +64,9 @@ class BillService
             $accountPatientId = null;
             $companyId = null;
 
-            if ($lockedPatient->isCompanyPatient()) {
+            if ($lockedPatient->isCashPatient()) {
+                // Casual callers pay at the desk — no prepaid balance to deduct.
+            } elseif ($lockedPatient->isCompanyPatient()) {
                 if (! $lockedPatient->company_id) {
                     throw new InvalidArgumentException('Company patient is not linked to a company account.');
                 }
@@ -100,11 +106,16 @@ class BillService
             ]);
 
             $bill = $bill->load(['patient', 'accountPatient', 'company', 'createdBy']);
-            $this->ledgerService->recordBill($bill, $user);
+
+            if (! $bill->isCashBill()) {
+                $this->ledgerService->recordBill($bill, $user);
+            }
 
             AuditLogger::log(
                 AuditActionType::BillCreated,
-                "Posted K {$total} bill for {$lockedPatient->name} ({$data['visit_type']}).",
+                $bill->isCashBill()
+                    ? "Issued K {$total} pay-as-you-go bill for {$lockedPatient->name} ({$data['visit_type']})."
+                    : "Posted K {$total} bill for {$lockedPatient->name} ({$data['visit_type']}).",
                 $bill,
                 ['patient_id' => $lockedPatient->id, 'total' => $total],
             );
@@ -113,10 +124,67 @@ class BillService
         });
     }
 
+    /**
+     * Record immediate payment for a casual caller bill at Accounts.
+     */
+    public function collectCashPayment(Bill $bill, PaymentMethod $paymentMethod, User $user): Bill
+    {
+        if (! $bill->isCashBill()) {
+            throw new InvalidArgumentException('Only casual caller bills can be paid at the desk.');
+        }
+
+        if ($bill->isVoided()) {
+            throw new InvalidArgumentException('Voided bills cannot be paid.');
+        }
+
+        if ($bill->isPaid()) {
+            throw new InvalidArgumentException('This bill has already been paid.');
+        }
+
+        return DB::transaction(function () use ($bill, $paymentMethod, $user): Bill {
+            $lockedBill = Bill::query()->lockForUpdate()->findOrFail($bill->id);
+
+            if (! $lockedBill->isCashBill() || $lockedBill->isPaid() || $lockedBill->isVoided()) {
+                throw new InvalidArgumentException('This bill is not awaiting cash payment.');
+            }
+
+            $lockedBill->update([
+                'payment_method' => $paymentMethod,
+                'paid_at' => now(),
+                'paid_by' => $user->id,
+            ]);
+
+            if ($lockedBill->visit_id) {
+                Visit::query()
+                    ->whereKey($lockedBill->visit_id)
+                    ->where('status', VisitStatus::Billed)
+                    ->update([
+                        'status' => VisitStatus::Completed,
+                        'completed_at' => now(),
+                    ]);
+            }
+
+            $paid = $lockedBill->fresh(['patient', 'visit', 'createdBy', 'paidBy']);
+
+            AuditLogger::log(
+                AuditActionType::BillCreated,
+                "Received K {$paid->total_amount} {$paymentMethod->label()} payment for casual caller {$paid->patient?->name}.",
+                $paid,
+                ['bill_id' => $paid->id, 'payment_method' => $paymentMethod->value],
+            );
+
+            return $paid;
+        });
+    }
+
     public function void(Bill $bill, string $reason, User $user): Bill
     {
         if ($bill->isVoided()) {
             throw new InvalidArgumentException('This bill has already been voided.');
+        }
+
+        if ($bill->isCashBill() && $bill->isPaid()) {
+            throw new InvalidArgumentException('Paid casual caller bills cannot be voided.');
         }
 
         return DB::transaction(function () use ($bill, $reason, $user): Bill {
@@ -141,8 +209,18 @@ class BillService
                 'voided_by' => $user->id,
             ]);
 
+            if ($lockedBill->visit_id) {
+                Visit::query()
+                    ->whereKey($lockedBill->visit_id)
+                    ->where('status', VisitStatus::Billed)
+                    ->update(['status' => VisitStatus::Cancelled]);
+            }
+
             $voided = $lockedBill->fresh(['patient', 'accountPatient', 'company', 'createdBy', 'voidedBy']);
-            $this->ledgerService->recordBillVoid($voided, $user, $reason);
+
+            if (! $voided->isCashBill()) {
+                $this->ledgerService->recordBillVoid($voided, $user, $reason);
+            }
 
             $patientName = $voided->patient?->name ?? 'Unknown patient';
 

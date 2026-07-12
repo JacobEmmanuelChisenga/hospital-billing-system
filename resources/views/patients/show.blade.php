@@ -21,7 +21,7 @@
                         <i class="fa-solid fa-id-card"></i> Membership Payment
                     </a>
                 @endif
-                @if (Auth::user()->canViewFinancialRecords())
+                @if (Auth::user()->canViewFinancialRecords() && ! $patient->isCashPatient())
                     <a href="{{ route('reports.patient-statement', ['patient' => $patient, 'preset' => 'month']) }}" class="btn-secondary">
                         <i class="fa-solid fa-file-lines"></i> Statement
                     </a>
@@ -47,20 +47,34 @@
 
     <div class="grid gap-6 lg:grid-cols-3">
         @if (Auth::user()->canViewFinancialRecords())
-            <div class="card card-body border-hospital-200 bg-hospital-50 lg:col-span-1">
-                <p class="section-subtitle text-hospital-700">Available Balance</p>
-                <p class="mt-2 text-3xl font-bold text-hospital-900">K {{ number_format((float) $patient->effectiveBalance(), 2) }}</p>
-                <p class="mt-2 text-sm text-hospital-700">
-                    Charged to: <span class="font-medium">{{ $patient->effectiveBalanceOwnerLabel() }}</span>
-                </p>
-                @if ($patient->isMember())
-                    <p class="form-hint mt-1">Member account balance</p>
-                @elseif ($patient->isDependant())
-                    <p class="form-hint mt-1">Deducted from principal member account</p>
-                @else
-                    <p class="form-hint mt-1">Deducted from company deposit pool</p>
-                @endif
-            </div>
+            @if ($patient->isCashPatient())
+                <div class="card card-body border-sky-200 bg-sky-50 lg:col-span-1">
+                    <p class="section-subtitle text-sky-700">Payment Type</p>
+                    <p class="mt-2 text-2xl font-bold text-sky-900">Pay As You Go</p>
+                    <p class="mt-2 text-sm text-sky-800">No deposit account — patient pays at Accounts after each visit.</p>
+                    @if ($patient->outstandingBillTotal() > 0)
+                        <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                            <p class="text-sm font-medium text-amber-800">Outstanding Bill</p>
+                            <p class="mt-1 text-xl font-bold text-amber-900">K {{ number_format($patient->outstandingBillTotal(), 2) }}</p>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="card card-body border-hospital-200 bg-hospital-50 lg:col-span-1">
+                    <p class="section-subtitle text-hospital-700">Available Balance</p>
+                    <p class="mt-2 text-3xl font-bold text-hospital-900">K {{ number_format((float) $patient->effectiveBalance(), 2) }}</p>
+                    <p class="mt-2 text-sm text-hospital-700">
+                        Charged to: <span class="font-medium">{{ $patient->effectiveBalanceOwnerLabel() }}</span>
+                    </p>
+                    @if ($patient->isMember())
+                        <p class="form-hint mt-1">Member account balance</p>
+                    @elseif ($patient->isDependant())
+                        <p class="form-hint mt-1">Deducted from principal member account</p>
+                    @else
+                        <p class="form-hint mt-1">Deducted from company deposit pool</p>
+                    @endif
+                </div>
+            @endif
         @endif
 
         <div class="card card-body {{ Auth::user()->canViewFinancialRecords() ? 'lg:col-span-2' : 'lg:col-span-3' }}">
@@ -75,7 +89,7 @@
                     <dd class="mt-1 font-medium">{{ $patient->name }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-500">File Number</dt>
+                    <dt class="text-slate-500">Hospital File Number</dt>
                     <dd class="mt-1 font-medium">{{ $patient->file_number ?? '—' }}</dd>
                 </div>
                 <div>
@@ -133,6 +147,13 @@
                     <dd class="mt-1 font-medium">{{ $patient->next_of_kin_phone ?? '—' }}</dd>
                 </div>
 
+                @if ($patient->isCashPatient())
+                    <div>
+                        <dt class="text-slate-500">Payment Type</dt>
+                        <dd class="mt-1 font-medium">Pay As You Go</dd>
+                    </div>
+                @endif
+
                 @if ($patient->isMember() || $patient->isDependant())
                     <div>
                         <dt class="text-slate-500">Membership Status</dt>
@@ -142,10 +163,15 @@
                             </span>
                         </dd>
                     </div>
-                    @if ($patient->isMember())
+                    @if ($patient->isMember() || $patient->isDependant())
                         <div>
                             <dt class="text-slate-500">Membership Number</dt>
-                            <dd class="mt-1 font-medium">{{ $patient->membership?->membership_number ?? 'Pending' }}</dd>
+                            <dd class="mt-1 font-medium">
+                                {{ $patient->effectiveMembershipNumber() ?? 'Pending' }}
+                                @if ($patient->isDependant())
+                                    <span class="block text-xs text-slate-500">Principal member's membership</span>
+                                @endif
+                            </dd>
                         </div>
                     @endif
                     <div>
@@ -223,7 +249,7 @@
                                     <a href="{{ route('patients.show', $dependant) }}" class="action-link">{{ $dependant->name }}</a>
                                 </td>
                                 <td>{{ $dependant->relationship ?? '—' }}</td>
-                                <td>{{ $dependant->hc_number ?? '—' }}</td>
+                                <td>{{ $dependant->effectiveMembershipNumber() ?? '—' }}</td>
                                 <td>{{ $dependant->status->label() }}</td>
                             </tr>
                         @endforeach
@@ -233,7 +259,61 @@
         </x-data-panel>
     @endif
 
-    @if (Auth::user()->canAccessAccountsModules())
+    @if ($patient->isCashPatient() && $visitHistory?->isNotEmpty())
+        <x-data-panel title="Visit History" class="mt-6">
+            <x-table-scroll>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Visit</th>
+                            <th class="text-right">Bill</th>
+                            <th class="text-right">Payment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($visitHistory as $visit)
+                            @php($bill = $visit->bill)
+                            <tr>
+                                <td>{{ $visit->visit_date->format('d M Y') }}</td>
+                                <td>{{ $visit->visit_type->label() }}</td>
+                                <td class="text-right">
+                                    @if ($bill)
+                                        <a href="{{ route('billing.show', $bill) }}" class="action-link">
+                                            K {{ number_format((float) $bill->total_amount, 2) }}
+                                        </a>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-right">
+                                    @if ($bill?->isPaid())
+                                        K {{ number_format((float) $bill->total_amount, 2) }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($bill?->isPaid())
+                                        <span class="badge badge-success">Paid</span>
+                                    @elseif ($bill?->isOutstanding())
+                                        <span class="badge badge-warning">Awaiting Payment</span>
+                                    @elseif ($visit->status === \App\Enums\VisitStatus::Cancelled)
+                                        <span class="badge badge-neutral">Cancelled</span>
+                                    @else
+                                        <span class="badge badge-neutral">{{ $visit->status->label() }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </x-table-scroll>
+        </x-data-panel>
+    @endif
+
+    @if (Auth::user()->canAccessAccountsModules() && ! $patient->isCashPatient())
         <div class="mt-6 grid gap-6 lg:grid-cols-2">
             <div class="card card-body">
                 <h3 class="section-title">Recent Deposits</h3>

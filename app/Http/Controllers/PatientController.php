@@ -74,7 +74,7 @@ class PatientController extends Controller
         $type = $request->string('type')->toString();
 
         return view('patients.create', array_merge($this->formData(), [
-            'preselectedType' => in_array($type, ['member', 'dependant', 'company'], true) ? $type : null,
+            'preselectedType' => in_array($type, ['member', 'dependant', 'company', 'cash_patient'], true) ? $type : null,
         ]));
     }
 
@@ -88,6 +88,7 @@ class PatientController extends Controller
 
         $patient->forceFill([
             'patient_number' => $this->patientNumber($patient),
+            'file_number' => $this->fileNumber($patient),
         ])->save();
 
         if ($patient->isMember()) {
@@ -102,6 +103,10 @@ class PatientController extends Controller
             ]);
 
             $patient->forceFill(['hc_number' => $membershipNumber])->save();
+        }
+
+        if ($patient->isDependant()) {
+            $this->syncDependantMembershipNumber($patient);
         }
 
         AuditLogger::log(
@@ -137,8 +142,20 @@ class PatientController extends Controller
             'bills' => fn ($query) => $query->latest()->limit(5),
         ]);
 
+        $visitHistory = null;
+
+        if ($patient->isCashPatient()) {
+            $visitHistory = $patient->visits()
+                ->with('bill')
+                ->orderByDesc('visit_date')
+                ->orderByDesc('id')
+                ->limit(20)
+                ->get();
+        }
+
         return view('patients.show', [
             'patient' => $patient,
+            'visitHistory' => $visitHistory,
         ]);
     }
 
@@ -163,6 +180,10 @@ class PatientController extends Controller
         $patient->update(
             $this->buildPatientAttributes($request->validated(), $patient->type, $patient)
         );
+
+        if ($patient->isDependant()) {
+            $this->syncDependantMembershipNumber($patient);
+        }
 
         AuditLogger::log(
             AuditActionType::PatientUpdated,
@@ -210,7 +231,6 @@ class PatientController extends Controller
             'man_number' => $data['man_number'] ?? null,
             'department' => $data['department'] ?? null,
             'employment_status' => $data['employment_status'] ?? null,
-            'file_number' => $data['file_number'] ?? null,
             'nrc_number' => $data['nrc_number'] ?? null,
             'nationality' => $data['nationality'],
             'marital_status' => $data['marital_status'],
@@ -232,7 +252,7 @@ class PatientController extends Controller
 
             $attributes['membership_status'] = match ($type) {
                 PatientType::Member, PatientType::Dependant => MembershipStatus::PendingPayment,
-                PatientType::Company => MembershipStatus::NotApplicable,
+                PatientType::Company, PatientType::CashPatient => MembershipStatus::NotApplicable,
             };
         } else {
             $attributes['status'] = PatientStatus::from($data['status']);
@@ -281,8 +301,32 @@ class PatientController extends Controller
         return 'RR-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT);
     }
 
+    /** Hospital chart / file number — assigned automatically at registration. */
+    private function fileNumber(Patient $patient): string
+    {
+        $prefix = config('hospital.file_number_prefix', 'RRGH');
+
+        return $prefix.'-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT);
+    }
+
     private function membershipNumber(Patient $patient): string
     {
         return 'HC-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT);
+    }
+
+    /** Copy the principal member's membership number onto the dependant record. */
+    private function syncDependantMembershipNumber(Patient $dependant): void
+    {
+        $dependant->loadMissing('principalMember.membership');
+
+        $membershipNumber = $dependant->effectiveMembershipNumber();
+
+        if (blank($membershipNumber)) {
+            return;
+        }
+
+        if ($dependant->hc_number !== $membershipNumber) {
+            $dependant->forceFill(['hc_number' => $membershipNumber])->save();
+        }
     }
 }

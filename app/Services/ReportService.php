@@ -378,7 +378,7 @@ class ReportService
         return [
             'patient' => $patient,
             'payer_label' => $statement['payer_label'] ?? $patient->effectiveBalanceOwnerLabel(),
-            'membership_number' => $statement['membership_number'],
+            'membership_number' => $patient->effectiveMembershipNumber(),
             'opening_balance' => $statement['opening_balance'],
             'closing_balance' => $statement['closing_balance'],
             'deposits_total' => $statement['deposits_total'],

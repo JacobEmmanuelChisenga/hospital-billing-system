@@ -37,8 +37,8 @@
                                 <td class="font-medium">{{ $patient->name }}</td>
                                 <td>{{ $patient->type->label() }}</td>
                                 <td>
-                                    @if ($patient->isMember())
-                                        {{ $patient->membership?->membership_number ?? 'Pending' }}
+                                    @if ($patient->isMember() || $patient->isDependant())
+                                        {{ $patient->effectiveMembershipNumber() ?? 'Pending' }}
                                     @elseif ($patient->isCompanyPatient())
                                         {{ $patient->man_number ?? '—' }}
                                     @else

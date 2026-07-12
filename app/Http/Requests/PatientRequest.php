@@ -54,10 +54,12 @@ abstract class PatientRequest extends FormRequest
             'hc_number' => [
                 'prohibited',
             ],
+            'file_number' => [
+                'prohibited',
+            ],
             'man_number' => ['nullable', 'string', 'max:50'],
             'department' => ['nullable', 'string', 'max:100'],
             'employment_status' => ['nullable', 'string', 'max:100'],
-            'file_number' => ['nullable', 'string', 'max:50'],
             'relationship' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'status' => ['nullable', Rule::enum(PatientStatus::class)],
@@ -80,10 +82,12 @@ abstract class PatientRequest extends FormRequest
                 if (! $this->input('principal_patient_id')) {
                     $validator->errors()->add('principal_patient_id', 'Please select the principal member for this dependant.');
                 } else {
-                    $principal = Patient::query()->find($this->input('principal_patient_id'));
+                    $principal = Patient::query()->with('membership')->find($this->input('principal_patient_id'));
 
                     if (! $principal?->isMember()) {
                         $validator->errors()->add('principal_patient_id', 'The principal must be an active member account.');
+                    } elseif (blank($principal->effectiveMembershipNumber())) {
+                        $validator->errors()->add('principal_patient_id', 'The principal member must have a membership number before registering a dependant.');
                     }
                 }
 
@@ -99,6 +103,14 @@ abstract class PatientRequest extends FormRequest
 
                 if (! $this->input('man_number')) {
                     $validator->errors()->add('man_number', 'Enter the employee MAN number for company patients.');
+                }
+            }
+
+            if ($type === PatientType::CashPatient) {
+                foreach (['principal_patient_id', 'relationship', 'company_id', 'man_number', 'department', 'employment_status'] as $field) {
+                    if ($this->filled($field)) {
+                        $validator->errors()->add($field, 'Casual callers are not linked to members or companies.');
+                    }
                 }
             }
 

@@ -73,15 +73,15 @@
                                 </a>
                                 <p class="text-xs text-slate-400">
                                     Patient No: {{ $patient->patient_number ?? '—' }}
-                                    @if ($patient->membership)
-                                        · Membership: {{ $patient->membership->membership_number }}
+                                    @if ($patient->effectiveMembershipNumber())
+                                        · Membership: {{ $patient->effectiveMembershipNumber() }}
                                     @endif
                                 </p>
                             </td>
                             <td>{{ $patient->type->label() }}</td>
                             <td>
-                                @if ($patient->isMember())
-                                    {{ $patient->membership?->membership_number ?? 'Pending' }}
+                                @if ($patient->isMember() || $patient->isDependant())
+                                    {{ $patient->effectiveMembershipNumber() ?? 'Pending' }}
                                 @elseif ($patient->isCompanyPatient())
                                     {{ $patient->man_number ?? '—' }}
                                 @else

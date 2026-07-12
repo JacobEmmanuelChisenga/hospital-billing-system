@@ -120,6 +120,7 @@ Route::middleware(['auth', 'role:administrator,accounts,registry'])->group(funct
 // Receipts list and reports — Accounts and Administrator only.
 Route::middleware(['auth', 'role:administrator,accounts'])->group(function () {
     Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('billing/{bill}/collect-payment', [BillingController::class, 'collectPayment'])->name('billing.collect-payment');
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');

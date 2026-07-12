@@ -133,6 +133,14 @@ class VisitController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
+        $visit->loadMissing('patient', 'bill');
+
+        if ($visit->patient->isCashPatient()) {
+            return redirect()
+                ->route('billing.show', $visit->bill)
+                ->with('success', 'Bill issued. Send the patient to Accounts for payment.');
+        }
+
         return redirect()
             ->route('billing.receipt', $visit->bill)
             ->with('success', 'Bill posted and visit completed. Balance deducted.');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\BillStatus;
 use App\Enums\PatientStatus;
+use App\Http\Requests\CollectCashPaymentRequest;
 use App\Http\Requests\StoreBillRequest;
 use App\Http\Requests\VoidBillRequest;
 use App\Models\Bill;
@@ -32,8 +33,16 @@ class BillingController extends Controller
             ->limit(50)
             ->get();
 
+        $outstandingCashBills = Bill::query()
+            ->with(['patient', 'createdBy', 'visit'])
+            ->outstandingCash()
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+
         return view('billing.index', [
             'todaysBills' => $todaysBills,
+            'outstandingCashBills' => $outstandingCashBills,
         ]);
     }
 
@@ -91,10 +100,11 @@ class BillingController extends Controller
      */
     public function show(Bill $bill): View
     {
-        $bill->load(['patient', 'accountPatient', 'company', 'createdBy', 'voidedBy']);
+        $bill->load(['patient', 'accountPatient', 'company', 'createdBy', 'voidedBy', 'paidBy', 'visit']);
 
         return view('billing.show', [
             'bill' => $bill,
+            'paymentMethods' => \App\Enums\PaymentMethod::cases(),
         ]);
     }
 
@@ -103,11 +113,31 @@ class BillingController extends Controller
      */
     public function receipt(Bill $bill): View
     {
-        $bill->load(['patient', 'accountPatient', 'company', 'createdBy']);
+        $bill->load(['patient', 'accountPatient', 'company', 'createdBy', 'paidBy']);
 
         return view('billing.receipt', [
             'bill' => $bill,
         ]);
+    }
+
+    /**
+     * Record immediate payment for a casual caller bill.
+     */
+    public function collectPayment(CollectCashPaymentRequest $request, Bill $bill): RedirectResponse
+    {
+        try {
+            $bill = $this->billService->collectCashPayment(
+                $bill,
+                \App\Enums\PaymentMethod::from($request->input('payment_method')),
+                $request->user(),
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('billing.receipt', $bill)
+            ->with('success', 'Payment recorded. Receipt is ready to print.');
     }
 
     /**
@@ -127,6 +157,8 @@ class BillingController extends Controller
 
         return redirect()
             ->route('billing.show', $bill)
-            ->with('success', 'Bill voided. Payer balance has been restored.');
+            ->with('success', $bill->isCashBill()
+                ? 'Bill voided.'
+                : 'Bill voided. Payer balance has been restored.');
     }
 }

@@ -134,6 +134,10 @@ class Patient extends Model
     /** Whether scheme membership is active (paid and not expired). */
     public function membershipIsActive(): bool
     {
+        if ($this->isCashPatient() || $this->isCompanyPatient()) {
+            return false;
+        }
+
         $membership = $this->membership;
 
         if ($membership) {
@@ -149,7 +153,7 @@ class Patient extends Model
 
     public function membershipStatusLabel(): string
     {
-        if ($this->isCompanyPatient()) {
+        if ($this->isCompanyPatient() || $this->isCashPatient()) {
             return MembershipStatus::NotApplicable->label();
         }
 
@@ -189,6 +193,17 @@ class Patient extends Model
     public function isCompanyPatient(): bool
     {
         return $this->type === PatientType::Company;
+    }
+
+    public function isCashPatient(): bool
+    {
+        return $this->type === PatientType::CashPatient;
+    }
+
+    /** Whether this patient pays from a prepaid account rather than at the desk. */
+    public function maintainsPrepaidAccount(): bool
+    {
+        return $this->isMember() || $this->isDependant() || $this->isCompanyPatient();
     }
 
     /**
@@ -237,13 +252,21 @@ class Patient extends Model
                 ->orWhereRaw('LOWER(nrc_number) LIKE ?', [$like])
                 ->orWhereRaw('LOWER(phone_number) LIKE ?', [$like])
                 ->orWhereHas('membership', fn (Builder $membershipQuery) => $membershipQuery
-                    ->whereRaw('LOWER(membership_number) LIKE ?', [$like]));
+                    ->whereRaw('LOWER(membership_number) LIKE ?', [$like]))
+                ->orWhereHas('principalMember.membership', fn (Builder $membershipQuery) => $membershipQuery
+                    ->whereRaw('LOWER(membership_number) LIKE ?', [$like]))
+                ->orWhereHas('principalMember', fn (Builder $principalQuery) => $principalQuery
+                    ->whereRaw('LOWER(hc_number) LIKE ?', [$like]));
         });
     }
 
     /** Balance available for billing this patient (member, principal, or company pool). */
     public function effectiveBalance(): string
     {
+        if ($this->isCashPatient()) {
+            return '0';
+        }
+
         if ($this->isCompanyPatient()) {
             return (string) ($this->company?->balance ?? 0);
         }
@@ -251,9 +274,39 @@ class Patient extends Model
         return (string) ($this->billableAccountPatient()?->balance ?? 0);
     }
 
+    /**
+     * Membership number shown on records and receipts.
+     *
+     * Members use their own membership. Dependants inherit the principal
+     * member's membership number.
+     */
+    public function effectiveMembershipNumber(): ?string
+    {
+        if ($this->isCompanyPatient()) {
+            return null;
+        }
+
+        if ($this->isCashPatient()) {
+            return null;
+        }
+
+        if ($this->isDependant()) {
+            $this->loadMissing('principalMember.membership');
+
+            return $this->principalMember?->effectiveMembershipNumber();
+        }
+
+        return $this->membership?->membership_number
+            ?? $this->hc_number;
+    }
+
     /** Label explaining whose account balance is shown on the profile page. */
     public function effectiveBalanceOwnerLabel(): string
     {
+        if ($this->isCashPatient()) {
+            return 'Pay as you go';
+        }
+
         if ($this->isCompanyPatient()) {
             return $this->company?->name ?? 'Company account';
         }
@@ -263,5 +316,18 @@ class Patient extends Model
         }
 
         return 'Own account';
+    }
+
+    /** Sum of unpaid cash bills for this casual caller. */
+    public function outstandingBillTotal(): float
+    {
+        if (! $this->isCashPatient()) {
+            return 0.0;
+        }
+
+        return (float) $this->bills()
+            ->posted()
+            ->outstandingCash()
+            ->sum('total_amount');
     }
 }

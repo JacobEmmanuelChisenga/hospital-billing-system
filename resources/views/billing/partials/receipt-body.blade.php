@@ -76,12 +76,33 @@
     </tfoot>
 </table>
 
-{{-- Company pool balances stay internal — only member/dependant receipts show remaining balance. --}}
-@if (! $bill->company_id)
+{{-- Company and casual caller receipts do not show a running balance. --}}
+@if (! $bill->company_id && ! $bill->isCashBill())
     <div class="border-t border-gray-200 pt-3 text-sm">
         <div class="flex justify-between">
             <span class="text-gray-500">Remaining Balance</span>
             <span class="font-medium">K {{ number_format($bill->payerBalanceAfter(), 2) }}</span>
+        </div>
+    </div>
+@endif
+
+@if ($bill->isCashBill() && $bill->isPaid())
+    <div class="border-t border-gray-200 pt-3 text-sm space-y-2">
+        <div class="flex justify-between">
+            <span class="text-gray-500">Amount Paid</span>
+            <span class="font-medium">K {{ number_format((float) $bill->total_amount, 2) }}</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-500">Payment Method</span>
+            <span>{{ $bill->payment_method?->label() }}</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-500">Received By</span>
+            <span>{{ $bill->paidBy?->name }}</span>
+        </div>
+        <div class="flex justify-between font-medium">
+            <span class="text-gray-500">Balance</span>
+            <span>K 0.00</span>
         </div>
     </div>
 @endif

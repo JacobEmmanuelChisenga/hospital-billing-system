@@ -14,13 +14,14 @@ class PostVisitBillRequest extends FormRequest
     public function rules(): array
     {
         $visit = $this->route('visit');
+        $visit?->loadMissing('patient');
         $total = $visit ? $visit->chargesTotal() : 0;
         $patient = $visit?->patient;
         $available = $patient ? (float) $patient->effectiveBalance() : 0;
 
         $rules = [];
 
-        if ($total > $available) {
+        if ($patient && ! $patient->isCashPatient() && $total > $available) {
             $rules['confirm_insufficient_balance'] = ['accepted'];
         }
 

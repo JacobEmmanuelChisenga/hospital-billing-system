@@ -46,4 +46,14 @@ return [
     */
     'low_balance_threshold' => (float) env('LOW_BALANCE_THRESHOLD', 1000),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Hospital file number prefix
+    |--------------------------------------------------------------------------
+    |
+    | Auto-generated hospital chart numbers use this prefix, e.g. RRGH-000356.
+    |
+    */
+    'file_number_prefix' => env('HOSPITAL_FILE_PREFIX', 'RRGH'),
+
 ];

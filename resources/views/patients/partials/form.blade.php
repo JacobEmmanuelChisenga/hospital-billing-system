@@ -33,6 +33,22 @@
             </select>
             <x-input-error :messages="$errors->get('type')" class="mt-2" />
         </div>
+
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 md:col-span-3">
+            <p class="text-sm text-slate-700">
+                <i class="fa-solid fa-hashtag mr-1 text-hospital-600"></i>
+                The system will automatically assign a <strong>hospital file number</strong> (e.g. {{ config('hospital.file_number_prefix') }}-000123) when you save this patient.
+            </p>
+        </div>
+    @endif
+
+    @if ($isEdit)
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p class="text-sm text-slate-700">
+                <span class="font-medium text-slate-500">Hospital File Number:</span>
+                <span class="ml-2 font-semibold text-slate-900">{{ $patient->file_number }}</span>
+            </p>
+        </div>
     @endif
 
     <div class="grid gap-6 md:grid-cols-3">
@@ -98,13 +114,6 @@
                 @endforeach
             </select>
             <x-input-error :messages="$errors->get('marital_status')" class="mt-2" />
-        </div>
-
-        <div>
-            <x-input-label for="file_number" :value="__('File Number (Optional)')" />
-            <x-text-input id="file_number" name="file_number" type="text" class="mt-1 block w-full"
-                :value="old('file_number', $patient->file_number ?? '')" />
-            <x-input-error :messages="$errors->get('file_number')" class="mt-2" />
         </div>
     </div>
 
@@ -218,7 +227,16 @@
             </select>
             <x-input-error :messages="$errors->get('relationship')" class="mt-2" />
         </div>
-        <p class="text-xs text-gray-500">Dependants are linked to a principal member. They do not use company or MAN number fields.</p>
+        <p class="text-xs text-gray-500">Dependants use the principal member's membership number. They do not use company or MAN number fields.</p>
+    </div>
+
+    {{-- Casual caller — pay as you go, no membership or deposit --}}
+    <div x-show="type === 'cash_patient'" x-cloak class="rounded-lg border border-sky-200 bg-sky-50 p-4 space-y-2">
+        <p class="text-sm font-medium text-sky-800">
+            <i class="fa-solid fa-hand-holding-dollar mr-1"></i> Casual Caller
+        </p>
+        <p class="text-sm text-sky-900">No membership or deposit account. The patient pays immediately at Accounts after services are billed.</p>
+        <p class="text-xs text-sky-800">A hospital file number will still be assigned for future visits.</p>
     </div>
 
     {{-- Company patient fields --}}

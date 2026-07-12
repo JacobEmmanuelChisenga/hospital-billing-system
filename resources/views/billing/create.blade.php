@@ -38,7 +38,7 @@
                     <dd class="font-medium">{{ $patient->hc_number ?? '—' }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-500">File Number</dt>
+                    <dt class="text-slate-500">Hospital File Number</dt>
                     <dd class="font-medium">{{ $patient->file_number ?? '—' }}</dd>
                 </div>
                 @if ($patient->isCompanyPatient())

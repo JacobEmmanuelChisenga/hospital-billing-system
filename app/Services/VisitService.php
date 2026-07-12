@@ -122,13 +122,16 @@ class VisitService
 
         $chargeData = $this->aggregateCharges($visit);
         $total = BillService::calculateTotal($chargeData);
+        $isCashPatient = $visit->patient->isCashPatient();
 
-        $available = (float) $visit->patient->effectiveBalance();
-        if ($total > $available && ! $confirmInsufficientBalance) {
-            throw new InvalidArgumentException('Insufficient balance. Confirm to proceed.');
+        if (! $isCashPatient) {
+            $available = (float) $visit->patient->effectiveBalance();
+            if ($total > $available && ! $confirmInsufficientBalance) {
+                throw new InvalidArgumentException('Insufficient balance. Confirm to proceed.');
+            }
         }
 
-        return DB::transaction(function () use ($visit, $user, $chargeData, $total): Visit {
+        return DB::transaction(function () use ($visit, $user, $chargeData, $total, $isCashPatient): Visit {
             $bill = $this->billService->post(
                 $visit->patient,
                 array_merge($chargeData, [
@@ -141,18 +144,32 @@ class VisitService
                 $user,
             );
 
-            $visit->update([
-                'status' => VisitStatus::Completed,
-                'bill_id' => $bill->id,
-                'completed_at' => now(),
-            ]);
+            if ($isCashPatient) {
+                $visit->update([
+                    'status' => VisitStatus::Billed,
+                    'bill_id' => $bill->id,
+                ]);
 
-            AuditLogger::log(
-                AuditActionType::VisitCompleted,
-                "Completed visit #{$visit->id} with bill K {$total} for {$visit->patient->name}.",
-                $visit,
-                ['bill_id' => $bill->id, 'total' => $total],
-            );
+                AuditLogger::log(
+                    AuditActionType::VisitCompleted,
+                    "Issued pay-as-you-go bill K {$total} for {$visit->patient->name} — awaiting Accounts payment.",
+                    $visit,
+                    ['bill_id' => $bill->id, 'total' => $total],
+                );
+            } else {
+                $visit->update([
+                    'status' => VisitStatus::Completed,
+                    'bill_id' => $bill->id,
+                    'completed_at' => now(),
+                ]);
+
+                AuditLogger::log(
+                    AuditActionType::VisitCompleted,
+                    "Completed visit #{$visit->id} with bill K {$total} for {$visit->patient->name}.",
+                    $visit,
+                    ['bill_id' => $bill->id, 'total' => $total],
+                );
+            }
 
             return $visit->fresh(['patient', 'bill', 'chargeLines', 'clinicalNote']);
         });
@@ -265,6 +282,10 @@ class VisitService
      */
     private function requiresPaymentBeforeConsultation(Patient $patient): bool
     {
+        if ($patient->isCashPatient()) {
+            return false;
+        }
+
         if ($patient->isCompanyPatient()) {
             return (float) $patient->effectiveBalance() <= 0;
         }

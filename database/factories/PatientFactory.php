@@ -14,6 +14,26 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PatientFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Patient $patient): void {
+            $updates = [];
+
+            if (blank($patient->file_number)) {
+                $prefix = config('hospital.file_number_prefix', 'RRGH');
+                $updates['file_number'] = $prefix.'-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT);
+            }
+
+            if (blank($patient->patient_number)) {
+                $updates['patient_number'] = 'RR-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT);
+            }
+
+            if ($updates !== []) {
+                $patient->forceFill($updates)->saveQuietly();
+            }
+        });
+    }
+
     public function definition(): array
     {
         return [
@@ -32,7 +52,7 @@ class PatientFactory extends Factory
             'company_id' => null,
             'principal_patient_id' => null,
             'relationship' => null,
-            'file_number' => fake()->optional()->bothify('FILE-####'),
+            'file_number' => null,
             'nrc_number' => fake()->optional()->bothify('######/##/#'),
             'nationality' => 'Zambian',
             'marital_status' => fake()->randomElement(['single', 'married', 'widowed', 'divorced']),
@@ -91,6 +111,22 @@ class PatientFactory extends Factory
             'man_number' => fake()->unique()->bothify('MAN-####'),
             'department' => fake()->optional()->word(),
             'employment_status' => fake()->optional()->randomElement(['Active', 'Retired', 'Contract']),
+        ]);
+    }
+
+    public function cashPatient(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => PatientType::CashPatient,
+            'company_id' => null,
+            'principal_patient_id' => null,
+            'relationship' => null,
+            'balance' => 0,
+            'hc_number' => null,
+            'man_number' => null,
+            'department' => null,
+            'employment_status' => null,
+            'membership_status' => MembershipStatus::NotApplicable,
         ]);
     }
 }

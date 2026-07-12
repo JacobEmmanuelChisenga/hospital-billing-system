@@ -8,6 +8,7 @@ use App\Models\Patient;
 use App\Services\ReportService;
 use App\Support\CsvExporter;
 use App\Support\PdfExporter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -95,8 +96,14 @@ class ReportController extends Controller
     /**
      * Patient statement — visits and deposits for a date range.
      */
-    public function patientStatement(ReportFilterRequest $request, Patient $patient): View
+    public function patientStatement(ReportFilterRequest $request, Patient $patient): View|RedirectResponse
     {
+        if ($patient->isCashPatient()) {
+            return redirect()
+                ->route('patients.show', $patient)
+                ->with('info', 'Casual callers do not have account statements. View visit history on the patient profile.');
+        }
+
         $range = $this->reportService->resolveDateRange($request);
         $statement = $this->reportService->patientStatement($patient, $range['from'], $range['to']);
 

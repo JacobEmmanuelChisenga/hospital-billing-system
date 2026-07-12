@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\AuditActionType;
+use App\Enums\MembershipStatus;
 use App\Enums\PatientType;
 use App\Models\AuditLog;
 use App\Models\Company;
+use App\Models\Membership;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,6 +49,10 @@ class PatientManagementTest extends TestCase
             'phone_number' => '0977000000',
             'next_of_kin_name' => 'Mary Registered',
         ]);
+
+        $patient = Patient::query()->where('name', 'Nurse Registered')->first();
+        $this->assertNotNull($patient->file_number);
+        $this->assertSame('RRGH-'.str_pad((string) $patient->id, 6, '0', STR_PAD_LEFT), $patient->file_number);
         $this->assertDatabaseHas('memberships', [
             'status' => 'pending_payment',
         ]);
@@ -95,6 +101,12 @@ class PatientManagementTest extends TestCase
     {
         $user = User::factory()->nursing()->create();
         $principal = Patient::factory()->member()->create(['name' => 'Principal Member']);
+        Membership::query()->create([
+            'patient_id' => $principal->id,
+            'membership_number' => 'HC-'.str_pad((string) $principal->id, 6, '0', STR_PAD_LEFT),
+            'status' => MembershipStatus::PendingPayment,
+        ]);
+        $principal->forceFill(['hc_number' => 'HC-'.str_pad((string) $principal->id, 6, '0', STR_PAD_LEFT)])->save();
 
         $response = $this->actingAs($user)->post(route('patients.store'), $this->patientPayload([
             'type' => PatientType::Dependant->value,
@@ -109,6 +121,8 @@ class PatientManagementTest extends TestCase
         $response->assertRedirect(route('patients.show', $patient));
         $this->assertSame($principal->id, $patient->principal_patient_id);
         $this->assertSame('Child', $patient->relationship);
+        $this->assertSame($principal->effectiveMembershipNumber(), $patient->hc_number);
+        $this->assertSame($principal->effectiveMembershipNumber(), $patient->effectiveMembershipNumber());
     }
 
     public function test_nursing_staff_can_register_company_patient_using_existing_company(): void

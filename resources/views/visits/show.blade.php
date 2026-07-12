@@ -19,9 +19,12 @@
                     <dd class="font-medium"><a href="{{ route('patients.show', $visit->patient) }}" class="action-link">{{ $visit->patient->name }}</a></dd>
                 </div>
                 <div>
-                    <dt class="text-slate-500">Membership</dt>
+                    <dt class="text-slate-500">Patient Type</dt>
                     <dd>
-                        @if ($visit->patient->isCompanyPatient())
+                        @if ($visit->patient->isCashPatient())
+                            <span class="badge badge-neutral">Casual Caller</span>
+                            <span class="form-hint mt-1 block">Pay as you go — no deposit account</span>
+                        @elseif ($visit->patient->isCompanyPatient())
                             <span class="text-slate-600">N/A (company patient)</span>
                         @elseif ($visit->patient->isDependant())
                             @php($principal = $visit->patient->principalMember)
@@ -36,10 +39,15 @@
                         @endif
                     </dd>
                 </div>
-                @if (Auth::user()->canManageVisits() || Auth::user()->canViewFinancialRecords())
+                @if ((Auth::user()->canManageVisits() || Auth::user()->canViewFinancialRecords()) && ! $visit->patient->isCashPatient())
                     <div>
                         <dt class="text-slate-500">Available Balance</dt>
                         <dd class="text-lg font-medium">K {{ number_format($availableBalance, 2) }}</dd>
+                    </div>
+                @elseif ($visit->patient->isCashPatient() && Auth::user()->canViewFinancialRecords())
+                    <div>
+                        <dt class="text-slate-500">Payment</dt>
+                        <dd class="text-lg font-medium">Pay As You Go</dd>
                     </div>
                 @endif
                 <div>
@@ -170,9 +178,9 @@
             <div class="panel-footer -mx-6 -mb-6 mt-6 flex flex-col gap-3 px-6 py-4 sm:flex-row sm:flex-wrap">
                 @if ($visit->canAddCharges())
                 <form method="POST" action="{{ route('visits.post-bill', $visit) }}" class="w-full sm:w-auto"
-                      onsubmit="return confirm('Post bill and deduct balance? This will complete the visit.');">
+                      onsubmit="return confirm('{{ $visit->patient->isCashPatient() ? 'Issue bill and send patient to Accounts for payment?' : 'Post bill and deduct balance? This will complete the visit.' }}');">
                     @csrf
-                    @if ($visit->chargesTotal() > $availableBalance)
+                    @if (! $visit->patient->isCashPatient() && $visit->chargesTotal() > $availableBalance)
                         <div class="mb-3 w-full rounded-lg border border-amber-200 bg-amber-50 p-4">
                             <p class="text-sm text-amber-800">Insufficient balance. Confirm to proceed.</p>
                             <label class="mt-2 flex items-center gap-2 text-sm">
@@ -183,7 +191,8 @@
                     @endif
                     <button type="submit" class="btn-primary w-full sm:w-auto"
                             @disabled($visit->chargeLines->isEmpty())>
-                        <i class="fa-solid fa-file-invoice-dollar"></i> Post Bill & Finish Visit
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        {{ $visit->patient->isCashPatient() ? 'Issue Bill' : 'Post Bill & Finish Visit' }}
                     </button>
                 </form>
                 @endif
@@ -198,7 +207,11 @@
         @elseif ($visit->bill)
             <div class="panel-footer -mx-6 -mb-6 mt-6 flex flex-col gap-2 px-6 py-4 sm:flex-row sm:gap-3">
                 <a href="{{ route('billing.show', $visit->bill) }}" class="action-link">View Bill #{{ $visit->bill->id }}</a>
-                @if (Auth::user()->canViewFinancialRecords())
+                @if ($visit->bill->isPaid() && Auth::user()->canViewFinancialRecords())
+                    <a href="{{ route('billing.receipt', $visit->bill) }}" class="action-link">Print Receipt</a>
+                @elseif ($visit->bill->isOutstanding() && Auth::user()->canViewFinancialRecords())
+                    <span class="text-sm text-amber-700">Awaiting Accounts payment</span>
+                @elseif (Auth::user()->canViewFinancialRecords() && ! $visit->patient->isCashPatient())
                     <a href="{{ route('billing.receipt', $visit->bill) }}" class="action-link">Print Receipt</a>
                 @endif
             </div>
