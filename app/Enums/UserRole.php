@@ -15,6 +15,9 @@ enum UserRole: string
     case Registry = 'registry';
     case Consultant = 'consultant';
 
+    /** @deprecated Renamed to Consultant — kept for legacy DB rows and cached routes */
+    case Nurse = 'nurse';
+
     /** @deprecated Use Registry — kept only for migration compatibility */
     case Nursing = 'nursing';
 
@@ -24,8 +27,32 @@ enum UserRole: string
             self::Administrator => 'Administrator',
             self::Accounts => 'Accounts Officer',
             self::Registry, self::Nursing => 'Registry Clerk',
-            self::Consultant => 'Consultant',
+            self::Consultant, self::Nurse => 'Consultant',
         };
+    }
+
+    /** Resolve middleware / route role strings, including legacy aliases. */
+    public static function fromRouteParameter(string $value): self
+    {
+        return match ($value) {
+            'nurse' => self::Consultant,
+            default => self::from($value),
+        };
+    }
+
+    /** Roles shown when creating or editing staff accounts. */
+    public static function assignableCases(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $role) => ! in_array($role, [self::Nurse, self::Nursing], true),
+        ));
+    }
+
+    /** Treat legacy nurse rows the same as consultant for permission checks. */
+    public function actsAsConsultant(): bool
+    {
+        return $this === self::Consultant || $this === self::Nurse;
     }
 
     /** Roles that can perform financial transactions (deposits, membership payments). */
@@ -43,7 +70,7 @@ enum UserRole: string
     /** Roles that can search and view patient profiles. */
     public static function patientViewAccess(): array
     {
-        return [self::Administrator, self::Accounts, self::Registry, self::Consultant, self::Nursing];
+        return [self::Administrator, self::Accounts, self::Registry, self::Consultant, self::Nurse, self::Nursing];
     }
 
     /** Roles that can register and edit patient demographics. */
@@ -61,6 +88,6 @@ enum UserRole: string
     /** Roles that can record clinical notes on visits. */
     public static function clinicalAccess(): array
     {
-        return [self::Consultant];
+        return [self::Consultant, self::Nurse];
     }
 }

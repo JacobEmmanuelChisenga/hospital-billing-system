@@ -24,7 +24,7 @@ class UpdateStaffUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staffUser->id)],
-            'role' => ['required', Rule::enum(UserRole::class)],
+            'role' => ['required', Rule::enum(UserRole::class)->only(UserRole::assignableCases())],
             'status' => ['required', Rule::enum(UserStatus::class)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ];

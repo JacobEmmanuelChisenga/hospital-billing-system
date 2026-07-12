@@ -23,7 +23,7 @@ class EnsureUserHasRole
         }
 
         $allowedRoles = array_map(
-            fn (string $role) => UserRole::from($role),
+            fn (string $role) => UserRole::fromRouteParameter($role),
             $roles
         );
 

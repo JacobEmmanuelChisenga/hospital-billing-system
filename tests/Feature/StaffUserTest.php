@@ -55,7 +55,7 @@ class StaffUserTest extends TestCase
         $this->actingAs($admin)->patch(route('staff-users.update', $staff), [
             'name' => 'Updated Name',
             'email' => $staff->email,
-            'role' => UserRole::Nursing->value,
+            'role' => UserRole::Registry->value,
             'status' => UserStatus::Active->value,
             'password' => 'new-password',
             'password_confirmation' => 'new-password',
@@ -63,7 +63,7 @@ class StaffUserTest extends TestCase
 
         $staff->refresh();
         $this->assertSame('Updated Name', $staff->name);
-        $this->assertSame(UserRole::Nursing, $staff->role);
+        $this->assertSame(UserRole::Registry, $staff->role);
         $this->assertTrue(Hash::check('new-password', $staff->password));
 
         $this->assertDatabaseHas('audit_logs', [

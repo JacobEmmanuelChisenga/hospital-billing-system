@@ -20,7 +20,7 @@ class StoreStaffUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::enum(UserRole::class)],
+            'role' => ['required', Rule::enum(UserRole::class)->only(UserRole::assignableCases())],
             'status' => ['required', Rule::enum(UserStatus::class)],
             'password' => ['required', 'confirmed', Password::defaults()],
         ];

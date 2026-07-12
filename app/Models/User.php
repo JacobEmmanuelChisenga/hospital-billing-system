@@ -60,7 +60,13 @@ class User extends Authenticatable
 
     public function isConsultant(): bool
     {
-        return $this->role === UserRole::Consultant;
+        return $this->role->actsAsConsultant();
+    }
+
+    /** @deprecated Use isConsultant() */
+    public function isNurse(): bool
+    {
+        return $this->isConsultant();
     }
 
     /** @deprecated Use isRegistryClerk() */
@@ -71,12 +77,33 @@ class User extends Authenticatable
 
     public function hasRole(UserRole $role): bool
     {
-        return $this->role === $role;
+        return $this->normalizedRole() === $this->normalizeRole($role);
     }
 
     public function hasAnyRole(array $roles): bool
     {
-        return in_array($this->role, $roles, true);
+        $userRole = $this->normalizedRole();
+
+        foreach ($roles as $role) {
+            if ($userRole === $this->normalizeRole($role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizedRole(): UserRole
+    {
+        return $this->normalizeRole($this->role);
+    }
+
+    private function normalizeRole(UserRole $role): UserRole
+    {
+        return match ($role) {
+            UserRole::Nurse => UserRole::Consultant,
+            default => $role,
+        };
     }
 
     /** Can create deposits, membership payments, and company accounts. */

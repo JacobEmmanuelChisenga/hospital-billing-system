@@ -43,7 +43,7 @@ class StaffUserController extends Controller
             'search' => $search,
             'role' => $role,
             'status' => $status,
-            'roles' => UserRole::cases(),
+            'roles' => UserRole::assignableCases(),
             'statuses' => UserStatus::cases(),
         ]);
     }
@@ -51,7 +51,7 @@ class StaffUserController extends Controller
     public function create(): View
     {
         return view('staff-users.create', [
-            'roles' => UserRole::cases(),
+            'roles' => UserRole::assignableCases(),
             'statuses' => UserStatus::cases(),
         ]);
     }
@@ -83,7 +83,7 @@ class StaffUserController extends Controller
     {
         return view('staff-users.edit', [
             'staffUser' => $user,
-            'roles' => UserRole::cases(),
+            'roles' => UserRole::assignableCases(),
             'statuses' => UserStatus::cases(),
         ]);
     }

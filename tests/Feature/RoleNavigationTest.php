@@ -55,6 +55,14 @@ class RoleNavigationTest extends TestCase
         $this->actingAs($user)->get(route('consultant.queue'))->assertForbidden();
     }
 
+    public function test_legacy_nurse_role_user_can_access_consultant_workflow_routes(): void
+    {
+        $user = User::factory()->create(['role' => 'nurse']);
+
+        $this->assertTrue($user->isConsultant());
+        $this->actingAs($user)->get(route('consultant.queue'))->assertOk();
+    }
+
     public function test_member_registration_link_preselects_patient_type(): void
     {
         $user = User::factory()->registry()->create();
