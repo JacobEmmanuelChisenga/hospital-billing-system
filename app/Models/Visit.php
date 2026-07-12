@@ -86,6 +86,13 @@ class Visit extends Model
         return (float) $this->chargeLines()->sum('amount');
     }
 
+    public function visitNumber(): string
+    {
+        $prefix = config('hospital.visit_number_prefix', 'V');
+
+        return $prefix.str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNotIn('status', [VisitStatus::Completed->value, VisitStatus::Cancelled->value]);

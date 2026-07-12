@@ -61,7 +61,7 @@ class VisitService
     public function addCharge(Visit $visit, array $data, User $user): ChargeLine
     {
         if (! $visit->canAddCharges()) {
-            throw new InvalidArgumentException('Charges can only be added after the consultant completes clinical notes.');
+            throw new InvalidArgumentException('Charges can only be posted after the consultant completes the consultation.');
         }
 
         $service = BillableService::query()
@@ -111,7 +111,7 @@ class VisitService
     public function postBill(Visit $visit, User $user, bool $confirmInsufficientBalance = false): Visit
     {
         if (! $visit->canAddCharges()) {
-            throw new InvalidArgumentException('Only visits awaiting billing can be billed.');
+            throw new InvalidArgumentException('Only visits awaiting charges can be billed.');
         }
 
         $visit->load(['patient.company', 'patient.principalMember', 'chargeLines']);
@@ -152,7 +152,7 @@ class VisitService
 
                 AuditLogger::log(
                     AuditActionType::VisitCompleted,
-                    "Issued pay-as-you-go bill K {$total} for {$visit->patient->name} — awaiting Accounts payment.",
+                    "Posted charges K {$total} for {$visit->patient->name} — awaiting Accounts payment.",
                     $visit,
                     ['bill_id' => $bill->id, 'total' => $total],
                 );

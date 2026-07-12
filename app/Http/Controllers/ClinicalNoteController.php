@@ -19,7 +19,7 @@ class ClinicalNoteController extends Controller
         if (! $visit->canRecordClinicalNotes()) {
             return redirect()
                 ->route('visits.show', $visit)
-                ->with('error', 'Clinical notes can only be edited after Accounts clears the patient for consultation.');
+                ->with('error', 'Clinical notes can only be recorded while the visit is waiting for consultation.');
         }
 
         $visit->load(['patient', 'clinicalNote']);
@@ -36,6 +36,6 @@ class ClinicalNoteController extends Controller
 
         return redirect()
             ->route('consultant.queue')
-            ->with('success', 'Consultation saved. Visit is now awaiting billing.');
+            ->with('success', 'Consultation complete. Visit is now awaiting charges.');
     }
 }

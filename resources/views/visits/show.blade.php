@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Visit — {{ $visit->patient->name }}" :subtitle="$visit->visit_date->format('d M Y') . ' · Opened ' . $visit->created_at->format('d M Y, H:i') . ' · ' . $visit->visit_type->label()">
+        <x-page-header title="Visit — {{ $visit->visitNumber() }}" :subtitle="$visit->patient->name . ' · ' . $visit->visit_date->format('d M Y') . ' · ' . $visit->visit_type->label()">
             <x-slot name="actions">
                 <span class="badge {{ $visit->status->badgeClass() }}">{{ $visit->status->label() }}</span>
                 <a href="{{ route('visits.index') }}" class="btn-ghost">&larr; All Visits</a>
@@ -94,9 +94,9 @@
                 </dl>
             @else
                 @if (Auth::user()->canRecordClinicalNotes() && ! $visit->canRecordClinicalNotes())
-                    <p class="mt-4 text-sm text-slate-500">This visit is <span class="font-medium">{{ $visit->status->label() }}</span>. You can record notes once the patient is ready for consultation.</p>
+                    <p class="mt-4 text-sm text-slate-500">This visit is <span class="font-medium">{{ $visit->status->label() }}</span>. You can record notes once the patient is waiting for consultation.</p>
                 @else
-                    <p class="mt-4 text-sm text-slate-500">No clinical notes recorded yet. The consultant documents the visit before charges are posted.</p>
+                    <p class="mt-4 text-sm text-slate-500">No clinical notes recorded yet. The consultant completes the consultation before charges are posted.</p>
                 @endif
             @endif
         </div>
@@ -178,7 +178,7 @@
             <div class="panel-footer -mx-6 -mb-6 mt-6 flex flex-col gap-3 px-6 py-4 sm:flex-row sm:flex-wrap">
                 @if ($visit->canAddCharges())
                 <form method="POST" action="{{ route('visits.post-bill', $visit) }}" class="w-full sm:w-auto"
-                      onsubmit="return confirm('{{ $visit->patient->isCashPatient() ? 'Issue bill and send patient to Accounts for payment?' : 'Post bill and deduct balance? This will complete the visit.' }}');">
+                      onsubmit="return confirm('{{ $visit->patient->isCashPatient() ? 'Post charges and send patient to Accounts for payment?' : 'Post charges and deduct balance? This will complete the visit.' }}');">
                     @csrf
                     @if (! $visit->patient->isCashPatient() && $visit->chargesTotal() > $availableBalance)
                         <div class="mb-3 w-full rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -192,7 +192,7 @@
                     <button type="submit" class="btn-primary w-full sm:w-auto"
                             @disabled($visit->chargeLines->isEmpty())>
                         <i class="fa-solid fa-file-invoice-dollar"></i>
-                        {{ $visit->patient->isCashPatient() ? 'Issue Bill' : 'Post Bill & Finish Visit' }}
+                        {{ $visit->patient->isCashPatient() ? 'Post Charges' : 'Post Charges & Finish Visit' }}
                     </button>
                 </form>
                 @endif

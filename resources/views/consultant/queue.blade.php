@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Today's Queue" subtitle="Patients ready for consultation today." />
+        <x-page-header title="Today's Queue" subtitle="Patients waiting for consultant review today." />
     </x-slot>
 
     <x-flash-messages />
@@ -22,14 +22,17 @@
                     <div class="min-w-0">
                         <p class="font-semibold text-slate-900">{{ $visit->patient->name }}</p>
                         <p class="mt-1 text-sm text-slate-500">
-                            {{ $visit->visit_type->label() }}
+                            {{ $visit->visitNumber() }}
+                            · {{ $visit->visit_type->label() }}
                             · Opened {{ $visit->created_at->format('H:i') }}
-                            @if ($visit->patient->effectiveMembershipNumber())
+                            @if ($visit->patient->isCashPatient())
+                                · Casual Caller
+                            @elseif ($visit->patient->effectiveMembershipNumber())
                                 · {{ $visit->patient->effectiveMembershipNumber() }}
                             @endif
                         </p>
                     </div>
-                    <span class="badge-info shrink-0">Waiting</span>
+                    <span class="badge-info shrink-0">Waiting for Consultant</span>
                 </div>
             </a>
         @empty

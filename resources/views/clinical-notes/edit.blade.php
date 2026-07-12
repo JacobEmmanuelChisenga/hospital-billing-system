@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-page-header title="Clinical Notes" subtitle="{{ $visit->patient->name }} — {{ $visit->visit_date->format('d M Y') }}" />
+        <x-page-header title="Clinical Notes" :subtitle="$visit->visitNumber() . ' — ' . $visit->patient->name . ' — ' . $visit->visit_date->format('d M Y')" />
     </x-slot>
 
     <x-flash-messages />
@@ -28,7 +28,7 @@
 
             <div class="panel-footer -mx-6 -mb-6 mt-6 flex gap-3 px-6 py-4">
                 <button type="submit" class="btn-primary">
-                    <i class="fa-solid fa-notes-medical"></i> Save Clinical Notes
+                    <i class="fa-solid fa-circle-check"></i> Complete Consultation
                 </button>
                 <a href="{{ route('visits.show', $visit) }}" class="btn-ghost self-center">Back to Visit</a>
             </div>

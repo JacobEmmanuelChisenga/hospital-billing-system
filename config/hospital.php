@@ -56,4 +56,14 @@ return [
     */
     'file_number_prefix' => env('HOSPITAL_FILE_PREFIX', 'RRGH'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Visit number prefix
+    |--------------------------------------------------------------------------
+    |
+    | Display reference for open visits, e.g. V000154.
+    |
+    */
+    'visit_number_prefix' => env('HOSPITAL_VISIT_PREFIX', 'V'),
+
 ];

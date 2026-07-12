@@ -17,7 +17,7 @@ class ChargeController extends Controller
         return $this->renderList(
             $request,
             title: 'Pending Charges',
-            description: 'Patients seen by the consultant who are waiting for services to be charged.',
+            description: 'Patients seen by the consultant who are waiting for billable services to be selected.',
             status: VisitStatus::AwaitingBilling,
             requireCharges: false,
         );
@@ -28,7 +28,7 @@ class ChargeController extends Controller
         return $this->renderList(
             $request,
             title: 'Post Charges',
-            description: 'Select services and post charges to complete each visit.',
+            description: 'Review consultant notes, select billable services, and post charges.',
             status: VisitStatus::AwaitingBilling,
             requireCharges: null,
         );

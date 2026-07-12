@@ -17,7 +17,7 @@ class ClinicalNoteService
     public function record(Visit $visit, array $data, User $user): ClinicalNote
     {
         if (! $visit->canRecordClinicalNotes()) {
-            throw new InvalidArgumentException('Clinical notes can only be recorded after Accounts clears the patient for consultation.');
+            throw new InvalidArgumentException('Clinical notes can only be recorded while the visit is waiting for or receiving consultation.');
         }
 
         $note = ClinicalNote::query()->updateOrCreate(

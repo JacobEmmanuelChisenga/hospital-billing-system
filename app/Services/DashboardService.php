@@ -79,7 +79,7 @@ class DashboardService
                     'href' => route('visits.index'),
                 ],
                 [
-                    'label' => 'Awaiting Billing',
+                    'label' => 'Awaiting Charges',
                     'value' => number_format($awaitingBilling),
                     'tone' => 'orange',
                     'trend' => $this->trendDirection($awaitingBilling, $awaitingBillingYesterday),
@@ -618,7 +618,7 @@ class DashboardService
                     ['label' => 'Registered', 'data' => $opened['values'], 'borderColor' => '#2563eb', 'backgroundColor' => 'rgba(37, 99, 235, 0.08)'],
                     ['label' => 'Waiting Consultant', 'data' => $waiting['values'], 'borderColor' => '#f59e0b', 'backgroundColor' => 'rgba(245, 158, 11, 0.08)'],
                     ['label' => 'Consulted', 'data' => $consulted['values'], 'borderColor' => '#7c3aed', 'backgroundColor' => 'rgba(124, 58, 237, 0.08)'],
-                    ['label' => 'Awaiting Billing', 'data' => $awaitingBilling['values'], 'borderColor' => '#ea580c', 'backgroundColor' => 'rgba(234, 88, 12, 0.08)'],
+                    ['label' => 'Awaiting Charges', 'data' => $awaitingBilling['values'], 'borderColor' => '#ea580c', 'backgroundColor' => 'rgba(234, 88, 12, 0.08)'],
                     ['label' => 'Completed', 'data' => $completed['values'], 'borderColor' => '#059669', 'backgroundColor' => 'rgba(5, 150, 105, 0.08)'],
                 ],
             ],
@@ -633,7 +633,7 @@ class DashboardService
         return [
             'labels' => [
                 'Awaiting Payment',
-                'Awaiting Billing',
+                'Awaiting Charges',
                 'Missing Charges',
             ],
             'values' => [
@@ -729,7 +729,7 @@ class DashboardService
         $groups = [
             'Waiting' => $visits->where('status', VisitStatus::ReadyForConsultation)->count(),
             'In Consultation' => $visits->where('status', VisitStatus::SeenByNurse)->count(),
-            'Awaiting Billing' => $visits->where('status', VisitStatus::AwaitingBilling)->count(),
+            'Awaiting Charges' => $visits->where('status', VisitStatus::AwaitingBilling)->count(),
             'Completed' => $visits->where('status', VisitStatus::Completed)->count(),
         ];
 

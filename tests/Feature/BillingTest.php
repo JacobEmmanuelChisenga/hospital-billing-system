@@ -144,7 +144,7 @@ class BillingTest extends TestCase
         $this->actingAs($user)
             ->get(route('visits.show', $visit))
             ->assertOk()
-            ->assertSee('Ready for Consultation');
+            ->assertSee('Waiting for Consultant');
 
         $this->assertSame(VisitStatus::ReadyForConsultation, $visit->fresh()->status);
     }

@@ -80,7 +80,7 @@ class VisitController extends Controller
 
         return redirect()
             ->route('visits.show', $visit)
-            ->with('success', 'Visit opened. Consultant can record clinical notes; add charges when ready to bill.');
+            ->with('success', 'Visit opened. Patient is waiting for the consultant.');
     }
 
     public function show(Visit $visit): View
@@ -138,7 +138,7 @@ class VisitController extends Controller
         if ($visit->patient->isCashPatient()) {
             return redirect()
                 ->route('billing.show', $visit->bill)
-                ->with('success', 'Bill issued. Send the patient to Accounts for payment.');
+                ->with('success', 'Charges posted. Send the patient to Accounts for payment.');
         }
 
         return redirect()

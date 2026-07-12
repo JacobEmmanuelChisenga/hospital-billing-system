@@ -24,9 +24,9 @@
             'border-hospital-200 bg-hospital-50' => ! $bill->isVoided() && ! $bill->isOutstanding(),
         ])>
             @if ($bill->isCashBill() && $bill->isOutstanding())
-                <p class="section-subtitle text-amber-800">Outstanding Bill</p>
+                <p class="section-subtitle text-amber-800">Payment Required</p>
                 <p class="mt-2 text-3xl font-bold text-slate-900">K {{ number_format((float) $bill->total_amount, 2) }}</p>
-                <p class="mt-2 text-sm text-amber-800">Payment Type: Pay As You Go</p>
+                <p class="mt-2 text-sm text-amber-800">Patient Type: Casual Caller</p>
                 <p class="mt-1 text-sm text-slate-600">Collect payment to close the visit.</p>
             @elseif ($bill->isCashBill() && $bill->isPaid())
                 <p class="section-subtitle text-hospital-700">Paid in Full</p>

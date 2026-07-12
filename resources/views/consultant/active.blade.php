@@ -32,7 +32,7 @@
                         <tr>
                             <td class="font-medium">{{ $visit->patient->name }}</td>
                             <td class="whitespace-nowrap">{{ $visit->created_at->format('H:i') }}</td>
-                            <td>{{ $visit->visit_type->label() }}</td>
+                            <td>{{ $visit->visitNumber() }}</td>
                             <td>
                                 <span class="badge {{ $visit->status->badgeClass() }}">{{ $visit->status->label() }}</span>
                             </td>

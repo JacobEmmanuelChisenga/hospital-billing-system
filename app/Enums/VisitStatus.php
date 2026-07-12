@@ -17,11 +17,11 @@ enum VisitStatus: string
     {
         return match ($this) {
             self::Registered => 'Registered',
-            self::AwaitingPayment => 'Awaiting Payment',
-            self::ReadyForConsultation => 'Ready for Consultation',
-            self::SeenByNurse => 'Seen by Consultant',
-            self::AwaitingBilling => 'Awaiting Billing',
-            self::Billed => 'Billed',
+            self::AwaitingPayment => 'Awaiting Account Payment',
+            self::ReadyForConsultation => 'Waiting for Consultant',
+            self::SeenByNurse => 'In Consultation',
+            self::AwaitingBilling => 'Awaiting Charges',
+            self::Billed => 'Awaiting Payment',
             self::Completed => 'Completed',
             self::Cancelled => 'Cancelled',
         };

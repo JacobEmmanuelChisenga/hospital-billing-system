@@ -39,9 +39,12 @@
                         <tr>
                             <td>{{ $visit->visit_date->format('d M Y') }}</td>
                             <td class="font-medium">{{ $visit->patient->name }}</td>
-                            <td>{{ $visit->visit_type->label() }}</td>
+                            <td class="font-medium">{{ $visit->visitNumber() }}</td>
                             <td>
                                 <span class="badge {{ $visit->status->badgeClass() }}">{{ $visit->status->label() }}</span>
+                                @if ($visit->patient->isCashPatient())
+                                    <span class="badge badge-neutral ml-1">Casual Caller</span>
+                                @endif
                             </td>
                             <td class="text-right font-medium">K {{ number_format($visit->chargesTotal(), 2) }}</td>
                             <td class="text-right">

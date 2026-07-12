@@ -60,6 +60,61 @@ class CashPatientTest extends TestCase
         $this->assertDatabaseMissing('memberships', ['patient_id' => $patient->id]);
     }
 
+    public function test_casual_caller_follows_standard_visit_workflow(): void
+    {
+        $registry = User::factory()->registry()->create();
+        $consultant = User::factory()->consultant()->create();
+        $accounts = User::factory()->accounts()->create();
+        $patient = Patient::factory()->cashPatient()->create(['name' => 'Mary Phiri']);
+
+        $visit = $this->openVisit($registry, $patient);
+
+        $this->assertSame(VisitStatus::ReadyForConsultation, $visit->status);
+        $this->assertSame('Waiting for Consultant', $visit->status->label());
+
+        $this->actingAs($consultant)->post(route('clinical-notes.store', $visit), [
+            'complaint' => 'Fever and headache',
+            'vitals' => 'Temp 38.5C',
+            'examination_findings' => 'Unwell',
+            'diagnosis' => 'Malaria',
+            'treatment_notes' => 'Injection administered',
+            'procedures_performed' => 'Laboratory test requested',
+        ])->assertRedirect(route('consultant.queue'));
+
+        $visit = $visit->fresh();
+        $this->assertSame(VisitStatus::AwaitingBilling, $visit->status);
+        $this->assertSame('Awaiting Charges', $visit->status->label());
+
+        $this->addServiceCharge($registry, $visit, 'Consultation');
+        $this->addServiceCharge($registry, $visit, 'Laboratory');
+        $this->addServiceCharge($registry, $visit, 'Pharmacy');
+
+        $this->actingAs($registry)->post(route('visits.post-bill', $visit))->assertRedirect();
+
+        $visit = $visit->fresh();
+        $bill = Bill::query()->firstOrFail();
+
+        $this->assertSame(VisitStatus::Billed, $visit->status);
+        $this->assertSame('Awaiting Payment', $visit->status->label());
+        $this->assertTrue($bill->isOutstanding());
+
+        $this->actingAs($accounts)
+            ->get(route('billing.index'))
+            ->assertOk()
+            ->assertSee('Awaiting Payment')
+            ->assertSee($visit->visitNumber())
+            ->assertSee('Mary Phiri')
+            ->assertSee('Casual Caller');
+
+        $this->actingAs($accounts)->post(route('billing.collect-payment', $bill), [
+            'payment_method' => PaymentMethod::MobileMoney->value,
+        ])->assertRedirect(route('billing.receipt', $bill));
+
+        $visit = $visit->fresh();
+        $this->assertSame(VisitStatus::Completed, $visit->status);
+        $this->assertTrue($bill->fresh()->isPaid());
+    }
+
     public function test_casual_caller_visit_bill_awaits_accounts_payment(): void
     {
         $registry = User::factory()->registry()->create();
