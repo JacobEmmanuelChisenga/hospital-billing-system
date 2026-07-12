@@ -34,9 +34,17 @@ enum UserRole: string
     /** Resolve middleware / route role strings, including legacy aliases. */
     public static function fromRouteParameter(string $value): self
     {
+        $value = strtolower(trim($value));
+
         return match ($value) {
+            'administrator' => self::Administrator,
+            'accounts' => self::Accounts,
+            'registry' => self::Registry,
+            'consultant' => self::Consultant,
             'nurse' => self::Consultant,
-            default => self::from($value),
+            'nursing' => self::Registry,
+            default => self::tryFrom($value)
+                ?? throw new \ValueError("\"{$value}\" is not a valid backing value for enum ".self::class),
         };
     }
 

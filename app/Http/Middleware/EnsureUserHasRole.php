@@ -24,7 +24,7 @@ class EnsureUserHasRole
 
         $allowedRoles = array_map(
             fn (string $role) => UserRole::fromRouteParameter($role),
-            $roles
+            $this->normalizeRoleParameters($roles)
         );
 
         if (! $user->hasAnyRole($allowedRoles)) {
@@ -32,5 +32,29 @@ class EnsureUserHasRole
         }
 
         return $next($request);
+    }
+
+    /**
+     * Laravel passes each role separately, but cached routes may still include
+     * legacy comma-separated values — normalize both shapes safely.
+     *
+     * @param  array<int, string>  $roles
+     * @return array<int, string>
+     */
+    private function normalizeRoleParameters(array $roles): array
+    {
+        $normalized = [];
+
+        foreach ($roles as $role) {
+            foreach (explode(',', $role) as $part) {
+                $part = trim($part);
+
+                if ($part !== '') {
+                    $normalized[] = $part;
+                }
+            }
+        }
+
+        return $normalized;
     }
 }
