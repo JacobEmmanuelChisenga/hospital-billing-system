@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\BillStatus;
 use App\Enums\PatientType;
+use App\Enums\PaymentMethod;
 use App\Enums\VisitType;
 use App\Models\Bill;
 use App\Models\Company;
@@ -140,7 +141,116 @@ class ReportService
             'total_company_balance' => (float) Company::query()->sum('balance'),
             'expiring_memberships' => $expiringMemberships,
             'expired_memberships' => $expiredMemberships,
+            'active_casual_callers' => Patient::query()
+                ->where('type', PatientType::CashPatient)
+                ->where('status', 'active')
+                ->count(),
+            'casual_billed_total' => $this->casualBilledTotal($from, $to),
+            'casual_collected_total' => $this->casualCollectedTotal($from, $to),
+            'casual_outstanding_total' => (float) Bill::query()->outstandingCash()->sum('total_amount'),
         ];
+    }
+
+    /**
+     * Casual caller collections — pay-as-you-go bills and payments for the period.
+     *
+     * @return array{
+     *     summary: array<string, mixed>,
+     *     bills: Collection<int, array<string, mixed>>,
+     *     payment_methods: Collection<int, array{method: string, count: int, total: float}>
+     * }
+     */
+    public function casualCallers(Carbon $from, Carbon $to): array
+    {
+        $bills = Bill::query()
+            ->with(['patient', 'paidBy'])
+            ->whereNull('account_patient_id')
+            ->whereNull('company_id')
+            ->whereHas('patient', fn ($query) => $query->where('type', PatientType::CashPatient))
+            ->whereDate('visit_date', '>=', $from)
+            ->whereDate('visit_date', '<=', $to)
+            ->where('status', BillStatus::Posted)
+            ->orderByDesc('visit_date')
+            ->orderByDesc('id')
+            ->get();
+
+        $collectedInPeriod = Bill::query()
+            ->whereNull('account_patient_id')
+            ->whereNull('company_id')
+            ->whereNotNull('paid_at')
+            ->whereBetween('paid_at', [$from, $to])
+            ->where('status', BillStatus::Posted)
+            ->whereHas('patient', fn ($query) => $query->where('type', PatientType::CashPatient))
+            ->get();
+
+        $paymentMethods = $collectedInPeriod
+            ->groupBy(fn (Bill $bill) => $bill->payment_method?->value ?? 'unknown')
+            ->map(function (Collection $group, string $method) {
+                $enum = PaymentMethod::tryFrom($method);
+
+                return [
+                    'method' => $enum?->label() ?? 'Unknown',
+                    'count' => $group->count(),
+                    'total' => (float) $group->sum('total_amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+
+        $paidFromPeriodBills = $bills->filter(fn (Bill $bill) => $bill->isPaid());
+        $outstandingFromPeriodBills = $bills->filter(fn (Bill $bill) => $bill->isOutstanding());
+
+        return [
+            'summary' => [
+                'active_patients' => Patient::query()
+                    ->where('type', PatientType::CashPatient)
+                    ->where('status', 'active')
+                    ->count(),
+                'bills_count' => $bills->count(),
+                'billed_total' => (float) $bills->sum('total_amount'),
+                'paid_count' => $paidFromPeriodBills->count(),
+                'paid_total' => (float) $paidFromPeriodBills->sum('total_amount'),
+                'outstanding_count' => $outstandingFromPeriodBills->count(),
+                'outstanding_total' => (float) $outstandingFromPeriodBills->sum('total_amount'),
+                'collected_in_period' => (float) $collectedInPeriod->sum('total_amount'),
+                'collected_count' => $collectedInPeriod->count(),
+                'current_outstanding' => (float) Bill::query()->outstandingCash()->sum('total_amount'),
+            ],
+            'bills' => $bills->map(fn (Bill $bill) => [
+                'bill' => $bill,
+                'patient' => $bill->patient,
+                'visit_label' => $bill->visit_type->label(),
+                'amount' => (float) $bill->total_amount,
+                'status' => $bill->isPaid() ? 'Paid' : 'Awaiting Payment',
+                'payment_method' => $bill->payment_method?->label(),
+                'paid_at' => $bill->paid_at,
+            ]),
+            'payment_methods' => $paymentMethods,
+        ];
+    }
+
+    private function casualBilledTotal(Carbon $from, Carbon $to): float
+    {
+        return (float) Bill::query()
+            ->posted()
+            ->whereNull('account_patient_id')
+            ->whereNull('company_id')
+            ->whereDate('visit_date', '>=', $from)
+            ->whereDate('visit_date', '<=', $to)
+            ->whereHas('patient', fn ($query) => $query->where('type', PatientType::CashPatient))
+            ->sum('total_amount');
+    }
+
+    private function casualCollectedTotal(Carbon $from, Carbon $to): float
+    {
+        return (float) Bill::query()
+            ->posted()
+            ->whereNull('account_patient_id')
+            ->whereNull('company_id')
+            ->whereNotNull('paid_at')
+            ->whereBetween('paid_at', [$from, $to])
+            ->whereHas('patient', fn ($query) => $query->where('type', PatientType::CashPatient))
+            ->sum('total_amount');
     }
 
     /**

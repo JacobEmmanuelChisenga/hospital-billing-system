@@ -17,7 +17,7 @@ class DepositsAndCompanyAccountsTest extends TestCase
 
     public function test_nursing_staff_cannot_load_deposits(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)
             ->get(route('deposits.index'))

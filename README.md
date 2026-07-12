@@ -39,7 +39,7 @@ Open `http://localhost:8000` and sign in with one of the seeded accounts (passwo
 | Administrator | `admin@ronaldross.local` |
 | Accounts Officer | `accounts@ronaldross.local` |
 | Registry Clerk | `registry@ronaldross.local` |
-| Nurse | `nurse@ronaldross.local` |
+| Consultant | `consultant@ronaldross.local` |
 
 Public registration is disabled. Staff accounts are created by administrators only.
 
@@ -145,7 +145,7 @@ If you add scheduled commands later, add this cron entry:
 
 ## Role access
 
-| Module | Registry Clerk | Accounts | Nurse | Administrator |
+| Module | Registry Clerk | Accounts | Consultant | Administrator |
 |--------|:---:|:---:|:---:|:---:|
 | Patient registration & visits | ✓ | | | 👁️ |
 | Clinical notes | | | ✓ | 👁️ |

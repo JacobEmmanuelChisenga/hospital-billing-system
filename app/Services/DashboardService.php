@@ -32,7 +32,7 @@ class DashboardService
         $registeredToday = Visit::query()->whereDate('created_at', $today)->count();
         $registeredYesterday = Visit::query()->whereDate('created_at', $yesterday)->count();
 
-        $waitingForNurse = Visit::query()
+        $waitingForConsultant = Visit::query()
             ->whereDate('visit_date', $today)
             ->where('status', VisitStatus::ReadyForConsultation)
             ->count();
@@ -71,11 +71,11 @@ class DashboardService
                     'href' => route('visits.index'),
                 ],
                 [
-                    'label' => 'Waiting for Nurse',
-                    'value' => number_format($waitingForNurse),
+                    'label' => 'Waiting for Consultant',
+                    'value' => number_format($waitingForConsultant),
                     'tone' => 'amber',
-                    'trend' => $this->trendDirection($waitingForNurse, $waitingYesterday),
-                    'trendLabel' => $this->trendLabel($waitingForNurse, $waitingYesterday),
+                    'trend' => $this->trendDirection($waitingForConsultant, $waitingYesterday),
+                    'trendLabel' => $this->trendLabel($waitingForConsultant, $waitingYesterday),
                     'href' => route('visits.index'),
                 ],
                 [
@@ -120,7 +120,7 @@ class DashboardService
         ];
     }
 
-    public function nurse(): array
+    public function consultant(): array
     {
         $today = today();
 
@@ -137,25 +137,25 @@ class DashboardService
         $inConsultation = $todayVisits->where('status', VisitStatus::SeenByNurse)->count();
 
         return [
-            'theme' => 'nurse',
+            'theme' => 'consultant',
             'kpis' => [
                 [
                     'label' => 'Patients Waiting',
                     'value' => number_format($waiting),
                     'tone' => 'amber',
-                    'href' => route('nurse.queue'),
+                    'href' => route('consultant.queue'),
                 ],
                 [
                     'label' => 'Patients Seen',
                     'value' => number_format($notesToday->count()),
                     'tone' => 'green',
-                    'href' => route('nurse.consultations', ['period' => 'today']),
+                    'href' => route('consultant.consultations', ['period' => 'today']),
                 ],
                 [
                     'label' => 'Pending Consultations',
                     'value' => number_format($waiting + $inConsultation),
                     'tone' => 'orange',
-                    'href' => route('nurse.active'),
+                    'href' => route('consultant.active'),
                 ],
             ],
             'charts' => [
@@ -176,11 +176,11 @@ class DashboardService
                 'caseStatus' => $this->pieChart(
                     'Patient Case Status',
                     null,
-                    $this->nurseCaseStatus($todayVisits),
+                    $this->consultantCaseStatus($todayVisits),
                     ['#f59e0b', '#059669', '#6366f1', '#94a3b8'],
                 ),
             ],
-            'recent' => $this->nurseQueue($todayVisits),
+            'recent' => $this->consultantQueue($todayVisits),
         ];
     }
 
@@ -381,7 +381,7 @@ class DashboardService
      * @param  Collection<int, Visit>  $todayVisits
      * @return list<array{patient: string, number: string, status: string, statusClass: string, url: string}>
      */
-    private function nurseQueue(Collection $todayVisits): array
+    private function consultantQueue(Collection $todayVisits): array
     {
         return $todayVisits
             ->whereIn('status', [VisitStatus::ReadyForConsultation, VisitStatus::SeenByNurse])
@@ -616,7 +616,7 @@ class DashboardService
                 'labels' => $hours->keys()->values()->all(),
                 'datasets' => [
                     ['label' => 'Registered', 'data' => $opened['values'], 'borderColor' => '#2563eb', 'backgroundColor' => 'rgba(37, 99, 235, 0.08)'],
-                    ['label' => 'Waiting Nurse', 'data' => $waiting['values'], 'borderColor' => '#f59e0b', 'backgroundColor' => 'rgba(245, 158, 11, 0.08)'],
+                    ['label' => 'Waiting Consultant', 'data' => $waiting['values'], 'borderColor' => '#f59e0b', 'backgroundColor' => 'rgba(245, 158, 11, 0.08)'],
                     ['label' => 'Consulted', 'data' => $consulted['values'], 'borderColor' => '#7c3aed', 'backgroundColor' => 'rgba(124, 58, 237, 0.08)'],
                     ['label' => 'Awaiting Billing', 'data' => $awaitingBilling['values'], 'borderColor' => '#ea580c', 'backgroundColor' => 'rgba(234, 88, 12, 0.08)'],
                     ['label' => 'Completed', 'data' => $completed['values'], 'borderColor' => '#059669', 'backgroundColor' => 'rgba(5, 150, 105, 0.08)'],
@@ -724,7 +724,7 @@ class DashboardService
      * @param  Collection<int, Visit>  $visits
      * @return array{labels: list<string>, values: list<int>}
      */
-    private function nurseCaseStatus(Collection $visits): array
+    private function consultantCaseStatus(Collection $visits): array
     {
         $groups = [
             'Waiting' => $visits->where('status', VisitStatus::ReadyForConsultation)->count(),
@@ -849,14 +849,14 @@ class DashboardService
             ->get()
             ->groupBy(fn (AuditLog $log) => match ($log->user?->role) {
                 UserRole::Registry, UserRole::Nursing => 'Registry Clerk',
-                UserRole::Nurse => 'Nurse',
+                UserRole::Consultant => 'Consultant',
                 UserRole::Accounts => 'Accounts',
                 UserRole::Administrator => 'Admin',
                 default => 'System',
             })
             ->map->count();
 
-        $order = ['Registry Clerk', 'Nurse', 'Accounts', 'Admin', 'System'];
+        $order = ['Registry Clerk', 'Consultant', 'Accounts', 'Admin', 'System'];
         $labels = [];
         $values = [];
 

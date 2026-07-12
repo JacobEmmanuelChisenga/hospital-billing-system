@@ -37,5 +37,9 @@
         <tr><td class="label">Reversed Deposits</td><td>{{ $summary['reversed_deposits_count'] }} (K {{ number_format($summary['reversed_deposits_total'], 2) }})</td></tr>
         <tr><td class="label">Memberships Expiring (30 days)</td><td>{{ $summary['expiring_memberships'] }}</td></tr>
         <tr><td class="label">Expired Memberships</td><td>{{ $summary['expired_memberships'] }}</td></tr>
+        <tr><td class="label">Casual Callers</td><td>{{ $summary['active_casual_callers'] }}</td></tr>
+        <tr><td class="label">Casual Caller Bills (period)</td><td>K {{ number_format($summary['casual_billed_total'], 2) }}</td></tr>
+        <tr><td class="label">Casual Caller Collections (period)</td><td>K {{ number_format($summary['casual_collected_total'], 2) }}</td></tr>
+        <tr><td class="label">Casual Caller Outstanding</td><td>K {{ number_format($summary['casual_outstanding_total'], 2) }}</td></tr>
     </table>
 @endsection

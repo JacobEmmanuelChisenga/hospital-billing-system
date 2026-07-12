@@ -3,7 +3,7 @@
         <x-page-header
             title="Clinical Dashboard"
             subtitle="How many patients am I treating and what conditions?"
-            theme="nurse"
+            theme="consultant"
             :dashboard="true"
         />
     </x-slot>
@@ -32,7 +32,7 @@
     </div>
 
     <div class="mt-6">
-        <x-dashboard-recent-panel title="Today's Queue" description="Patients waiting for or in consultation" :href="route('nurse.queue')">
+        <x-dashboard-recent-panel title="Today's Queue" description="Patients waiting for or in consultation" :href="route('consultant.queue')">
             @if (count($recent) === 0)
                 <p class="text-sm text-slate-500">No patients in the queue right now.</p>
             @else

@@ -29,7 +29,7 @@ class ReportsTest extends TestCase
 
     public function test_nursing_staff_cannot_view_reports(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)
             ->get(route('reports.index'))
@@ -37,6 +37,10 @@ class ReportsTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.member-accounts'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('reports.casual-callers'))
             ->assertForbidden();
     }
 
@@ -161,6 +165,67 @@ class ReportsTest extends TestCase
 
         $response = $this->actingAs($user)
             ->get(route('reports.transactions.export.pdf', ['preset' => 'today']));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_accounts_staff_can_view_casual_caller_report(): void
+    {
+        $user = User::factory()->accounts()->create();
+        $patient = Patient::factory()->cashPatient()->create(['name' => 'Mary Phiri']);
+
+        Bill::factory()->create([
+            'patient_id' => $patient->id,
+            'account_patient_id' => null,
+            'company_id' => null,
+            'visit_date' => today(),
+            'visit_type' => VisitType::Opd,
+            'total_amount' => 480,
+            'consultation_amount' => 300,
+            'pharmacy_amount' => 180,
+            'lab_amount' => 0,
+            'ward_amount' => 0,
+            'other_amount' => 0,
+            'status' => BillStatus::Posted,
+            'created_by' => User::factory()->registry()->create()->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('reports.casual-callers', ['preset' => 'today']))
+            ->assertOk()
+            ->assertSee('Casual Caller Report')
+            ->assertSee('Mary Phiri')
+            ->assertSee('K 480.00')
+            ->assertSee('Awaiting Payment');
+    }
+
+    public function test_consultant_cannot_view_casual_caller_report(): void
+    {
+        $user = User::factory()->consultant()->create();
+
+        $this->actingAs($user)
+            ->get(route('reports.casual-callers'))
+            ->assertForbidden();
+    }
+
+    public function test_casual_caller_report_csv_export_downloads(): void
+    {
+        $user = User::factory()->accounts()->create();
+
+        $response = $this->actingAs($user)
+            ->get(route('reports.casual-callers.export', ['preset' => 'today']));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+    }
+
+    public function test_casual_caller_report_pdf_export_downloads(): void
+    {
+        $user = User::factory()->accounts()->create();
+
+        $response = $this->actingAs($user)
+            ->get(route('reports.casual-callers.export.pdf', ['preset' => 'today']));
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');

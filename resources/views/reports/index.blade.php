@@ -51,6 +51,10 @@
                 <div class="flex justify-between border-t border-slate-100 pt-3"><dt class="text-slate-500">Reversed Deposits</dt><dd class="font-medium text-red-700">{{ $summary['reversed_deposits_count'] }} (K {{ number_format($summary['reversed_deposits_total'], 2) }})</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-500">Memberships Expiring (30 days)</dt><dd class="font-medium">{{ $summary['expiring_memberships'] }}</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-500">Expired Memberships</dt><dd class="font-medium">{{ $summary['expired_memberships'] }}</dd></div>
+                <div class="flex justify-between border-t border-slate-100 pt-3"><dt class="text-slate-500">Casual Callers</dt><dd class="font-medium">{{ $summary['active_casual_callers'] }}</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">Casual Caller Bills (period)</dt><dd class="font-medium">K {{ number_format($summary['casual_billed_total'], 2) }}</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">Casual Caller Collections (period)</dt><dd class="font-medium">K {{ number_format($summary['casual_collected_total'], 2) }}</dd></div>
+                <div class="flex justify-between"><dt class="text-slate-500">Casual Caller Outstanding</dt><dd class="font-medium">K {{ number_format($summary['casual_outstanding_total'], 2) }}</dd></div>
             </dl>
         </div>
     </div>
@@ -65,6 +69,9 @@
             </a>
             <a href="{{ route('reports.companies', request()->query()) }}" class="btn-secondary">
                 <i class="fa-solid fa-building"></i> Company Reports
+            </a>
+            <a href="{{ route('reports.casual-callers', request()->query()) }}" class="btn-secondary">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Casual Callers
             </a>
         @endif
     </div>

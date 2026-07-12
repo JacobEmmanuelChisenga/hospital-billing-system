@@ -9,7 +9,7 @@ use App\Http\Controllers\CompanyAccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\MembershipFeeController;
-use App\Http\Controllers\NurseWorkflowController;
+use App\Http\Controllers\ConsultantWorkflowController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffUserController;
@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Patient lookup — all operational staff plus admin oversight.
-Route::middleware(['auth', 'role:administrator,accounts,registry,nurse'])->group(function () {
+Route::middleware(['auth', 'role:administrator,accounts,registry,consultant'])->group(function () {
     Route::get('patients/search', [PatientController::class, 'search'])->name('patients.search');
     Route::get('patients', [PatientController::class, 'index'])->name('patients.index');
     Route::get('patients/{patient}', [PatientController::class, 'show'])->whereNumber('patient')->name('patients.show');
@@ -57,8 +57,8 @@ Route::middleware(['auth', 'role:registry'])->group(function () {
     });
 });
 
-// Patient visits — Registry manages; Nurse and Admin can view.
-Route::middleware(['auth', 'role:administrator,registry,nurse'])->prefix('visits')->name('visits.')->group(function () {
+// Patient visits — Registry manages; Consultant and Admin can view.
+Route::middleware(['auth', 'role:administrator,registry,consultant'])->prefix('visits')->name('visits.')->group(function () {
     Route::get('/', [VisitController::class, 'index'])->name('index');
     Route::get('/{visit}', [VisitController::class, 'show'])->whereNumber('visit')->name('show');
 });
@@ -73,15 +73,15 @@ Route::middleware(['auth', 'role:registry'])->prefix('visits')->name('visits.')-
     Route::post('/{visit}/cancel', [VisitController::class, 'cancel'])->whereNumber('visit')->name('cancel');
 });
 
-// Clinical notes — Nurse only.
-Route::middleware(['auth', 'role:nurse'])->group(function () {
+// Clinical notes — Consultant only.
+Route::middleware(['auth', 'role:consultant'])->group(function () {
     Route::get('visits/{visit}/clinical-notes', [ClinicalNoteController::class, 'edit'])->whereNumber('visit')->name('clinical-notes.edit');
     Route::post('visits/{visit}/clinical-notes', [ClinicalNoteController::class, 'store'])->whereNumber('visit')->name('clinical-notes.store');
 
-    Route::prefix('nurse')->name('nurse.')->group(function () {
-        Route::get('/queue', [NurseWorkflowController::class, 'queue'])->name('queue');
-        Route::get('/active', [NurseWorkflowController::class, 'active'])->name('active');
-        Route::get('/consultations', [NurseWorkflowController::class, 'consultations'])->name('consultations');
+    Route::prefix('consultant')->name('consultant.')->group(function () {
+        Route::get('/queue', [ConsultantWorkflowController::class, 'queue'])->name('queue');
+        Route::get('/active', [ConsultantWorkflowController::class, 'active'])->name('active');
+        Route::get('/consultations', [ConsultantWorkflowController::class, 'consultations'])->name('consultations');
     });
 });
 
@@ -141,6 +141,9 @@ Route::middleware(['auth', 'role:administrator,accounts'])->group(function () {
         Route::get('/companies/{company}', [ReportController::class, 'companyShow'])->name('companies.show');
         Route::get('/companies/{company}/export', [ReportController::class, 'exportCompany'])->name('companies.show.export');
         Route::get('/companies/{company}/export/pdf', [ReportController::class, 'exportCompanyPdf'])->name('companies.show.export.pdf');
+        Route::get('/casual-callers', [ReportController::class, 'casualCallers'])->name('casual-callers');
+        Route::get('/casual-callers/export', [ReportController::class, 'exportCasualCallers'])->name('casual-callers.export');
+        Route::get('/casual-callers/export/pdf', [ReportController::class, 'exportCasualCallersPdf'])->name('casual-callers.export.pdf');
     });
 });
 

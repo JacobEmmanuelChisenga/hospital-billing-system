@@ -113,9 +113,9 @@ class AccountLedgerTest extends TestCase
 
     private function recordClinicalNotes(Visit $visit): void
     {
-        $nurse = User::factory()->nurse()->create();
+        $consultant = User::factory()->consultant()->create();
 
-        $this->actingAs($nurse)->post(route('clinical-notes.store', $visit), [
+        $this->actingAs($consultant)->post(route('clinical-notes.store', $visit), [
             'complaint' => 'Headache',
             'diagnosis' => 'Malaria',
             'treatment_notes' => 'Medication',

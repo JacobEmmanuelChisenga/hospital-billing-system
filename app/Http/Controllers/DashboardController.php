@@ -22,8 +22,8 @@ class DashboardController extends Controller
             return view('dashboard.registry', $this->dashboardService->registry());
         }
 
-        if ($user->isNurse()) {
-            return view('dashboard.nurse', $this->dashboardService->nurse());
+        if ($user->isConsultant()) {
+            return view('dashboard.consultant', $this->dashboardService->consultant());
         }
 
         if ($user->isAccountsStaff()) {

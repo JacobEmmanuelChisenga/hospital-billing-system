@@ -6,7 +6,7 @@
     <x-flash-messages />
 
     <x-filter-panel>
-        <form method="GET" action="{{ route('nurse.active') }}" class="flex flex-col gap-3 sm:flex-row">
+        <form method="GET" action="{{ route('consultant.active') }}" class="flex flex-col gap-3 sm:flex-row">
             <div class="flex-1">
                 <input type="text" name="search" value="{{ $search }}" placeholder="Search patient..."
                     class="form-input !mt-0">

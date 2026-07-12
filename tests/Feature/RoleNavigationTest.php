@@ -29,30 +29,30 @@ class RoleNavigationTest extends TestCase
         $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Registered Today');
     }
 
-    public function test_nurse_can_access_nurse_workflow_routes(): void
+    public function test_consultant_can_access_consultant_workflow_routes(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
-        $this->actingAs($user)->get(route('nurse.queue'))->assertOk();
-        $this->actingAs($user)->get(route('nurse.active'))->assertOk();
-        $this->actingAs($user)->get(route('nurse.consultations'))->assertOk();
+        $this->actingAs($user)->get(route('consultant.queue'))->assertOk();
+        $this->actingAs($user)->get(route('consultant.active'))->assertOk();
+        $this->actingAs($user)->get(route('consultant.consultations'))->assertOk();
         $this->actingAs($user)->get(route('patients.search'))->assertOk();
         $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Clinical Dashboard');
     }
 
-    public function test_nurse_cannot_access_registry_charge_routes(): void
+    public function test_consultant_cannot_access_registry_charge_routes(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)->get(route('charges.pending'))->assertForbidden();
         $this->actingAs($user)->get(route('patients.create'))->assertForbidden();
     }
 
-    public function test_registry_clerk_cannot_access_nurse_workflow_routes(): void
+    public function test_registry_clerk_cannot_access_consultant_workflow_routes(): void
     {
         $user = User::factory()->registry()->create();
 
-        $this->actingAs($user)->get(route('nurse.queue'))->assertForbidden();
+        $this->actingAs($user)->get(route('consultant.queue'))->assertForbidden();
     }
 
     public function test_member_registration_link_preselects_patient_type(): void

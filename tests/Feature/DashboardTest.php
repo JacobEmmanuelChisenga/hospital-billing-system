@@ -33,9 +33,9 @@ class DashboardTest extends TestCase
             ->assertSee('data-dashboard-chart', false);
     }
 
-    public function test_nurse_dashboard_shows_clinical_charts(): void
+    public function test_consultant_dashboard_shows_clinical_charts(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)
             ->get(route('dashboard'))

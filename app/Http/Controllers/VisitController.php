@@ -80,7 +80,7 @@ class VisitController extends Controller
 
         return redirect()
             ->route('visits.show', $visit)
-            ->with('success', 'Visit opened. Nurse can record clinical notes; add charges when ready to bill.');
+            ->with('success', 'Visit opened. Consultant can record clinical notes; add charges when ready to bill.');
     }
 
     public function show(Visit $visit): View

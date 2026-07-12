@@ -63,10 +63,10 @@ class UserFactory extends Factory
         return $this->registry();
     }
 
-    public function nurse(): static
+    public function consultant(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Nurse,
+            'role' => UserRole::Consultant,
         ]);
     }
 

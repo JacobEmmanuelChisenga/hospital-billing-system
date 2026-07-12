@@ -66,6 +66,20 @@ class ReportController extends Controller
     }
 
     /**
+     * Casual caller collections — pay-as-you-go bills and payments.
+     */
+    public function casualCallers(ReportFilterRequest $request): View
+    {
+        $range = $this->reportService->resolveDateRange($request);
+        $report = $this->reportService->casualCallers($range['from'], $range['to']);
+
+        return view('reports.casual-callers', array_merge($range, [
+            'report' => $report,
+            'filters' => $request->validated(),
+        ]));
+    }
+
+    /**
      * Company pool balances and usage summary.
      */
     public function companies(ReportFilterRequest $request): View
@@ -128,6 +142,10 @@ class ReportController extends Controller
             ['Total Member Balances (K)', '', $summary['total_member_balance']],
             ['Company Patients', $summary['active_company_patients'], ''],
             ['Total Company Pools (K)', '', $summary['total_company_balance']],
+            ['Casual Callers', $summary['active_casual_callers'], ''],
+            ['Casual Caller Bills (K)', '', $summary['casual_billed_total']],
+            ['Casual Caller Collections (K)', '', $summary['casual_collected_total']],
+            ['Casual Caller Outstanding (K)', '', $summary['casual_outstanding_total']],
         ]);
 
         foreach ($summary['visit_summary'] as $row) {
@@ -269,6 +287,43 @@ class ReportController extends Controller
 
         return PdfExporter::download($filename, 'reports.pdf.companies', array_merge($range, [
             'companies' => $companies,
+        ]));
+    }
+
+    /** CSV export for casual caller collections report. */
+    public function exportCasualCallers(ReportFilterRequest $request): StreamedResponse
+    {
+        $range = $this->reportService->resolveDateRange($request);
+        $report = $this->reportService->casualCallers($range['from'], $range['to']);
+
+        $rows = $report['bills']->map(fn (array $row) => [
+            $row['bill']->visit_date->format('Y-m-d'),
+            $row['patient']->name,
+            $row['patient']->file_number ?? '',
+            $row['visit_label'],
+            $row['amount'],
+            $row['status'],
+            $row['payment_method'] ?? '',
+            $row['paid_at']?->format('Y-m-d H:i') ?? '',
+        ]);
+
+        $filename = 'casual-callers-'.$range['from']->format('Y-m-d').'-to-'.$range['to']->format('Y-m-d').'.csv';
+
+        return CsvExporter::download($filename, [
+            'Date', 'Patient', 'File Number', 'Visit', 'Amount (K)', 'Status', 'Payment Method', 'Paid At',
+        ], $rows);
+    }
+
+    /** PDF export for casual caller collections report. */
+    public function exportCasualCallersPdf(ReportFilterRequest $request): Response
+    {
+        $range = $this->reportService->resolveDateRange($request);
+        $report = $this->reportService->casualCallers($range['from'], $range['to']);
+
+        $filename = 'casual-callers-'.$range['from']->format('Y-m-d').'-to-'.$range['to']->format('Y-m-d').'.pdf';
+
+        return PdfExporter::download($filename, 'reports.pdf.casual-callers', array_merge($range, [
+            'report' => $report,
         ]));
     }
 

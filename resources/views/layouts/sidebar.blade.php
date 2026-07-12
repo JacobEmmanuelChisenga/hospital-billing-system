@@ -37,8 +37,8 @@
 
         @if (Auth::user()->isRegistryClerk())
             @include('layouts.sidebars.registry')
-        @elseif (Auth::user()->isNurse())
-            @include('layouts.sidebars.nurse')
+        @elseif (Auth::user()->isConsultant())
+            @include('layouts.sidebars.consultant')
         @elseif (Auth::user()->isAccountsStaff())
             @include('layouts.sidebars.accounts')
         @elseif (Auth::user()->isAdministrator())

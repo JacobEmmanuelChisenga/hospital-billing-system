@@ -6,14 +6,14 @@ namespace App\Enums;
  * Staff roles for the Ronald Ross High Cost workflow.
  *
  * Registry Clerk owns patient records and visit billing.
- * Nurse owns clinical notes. Accounts owns money. Administrator owns the system.
+ * Consultant owns clinical notes. Accounts owns money. Administrator owns the system.
  */
 enum UserRole: string
 {
     case Administrator = 'administrator';
     case Accounts = 'accounts';
     case Registry = 'registry';
-    case Nurse = 'nurse';
+    case Consultant = 'consultant';
 
     /** @deprecated Use Registry — kept only for migration compatibility */
     case Nursing = 'nursing';
@@ -24,7 +24,7 @@ enum UserRole: string
             self::Administrator => 'Administrator',
             self::Accounts => 'Accounts Officer',
             self::Registry, self::Nursing => 'Registry Clerk',
-            self::Nurse => 'Nurse',
+            self::Consultant => 'Consultant',
         };
     }
 
@@ -43,7 +43,7 @@ enum UserRole: string
     /** Roles that can search and view patient profiles. */
     public static function patientViewAccess(): array
     {
-        return [self::Administrator, self::Accounts, self::Registry, self::Nurse, self::Nursing];
+        return [self::Administrator, self::Accounts, self::Registry, self::Consultant, self::Nursing];
     }
 
     /** Roles that can register and edit patient demographics. */
@@ -61,6 +61,6 @@ enum UserRole: string
     /** Roles that can record clinical notes on visits. */
     public static function clinicalAccess(): array
     {
-        return [self::Nurse];
+        return [self::Consultant];
     }
 }

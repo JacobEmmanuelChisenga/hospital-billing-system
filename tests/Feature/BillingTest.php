@@ -28,9 +28,9 @@ class BillingTest extends TestCase
         $this->seed(BillableServiceSeeder::class);
     }
 
-    public function test_nurse_cannot_access_receipts(): void
+    public function test_consultant_cannot_access_receipts(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)
             ->get(route('billing.index'))
@@ -281,10 +281,10 @@ class BillingTest extends TestCase
             ->assertDontSee('K 19,850.00');
     }
 
-    public function test_nurse_can_record_clinical_notes_on_open_visit(): void
+    public function test_consultant_can_record_clinical_notes_on_open_visit(): void
     {
         $registry = User::factory()->registry()->create();
-        $nurse = User::factory()->nurse()->create();
+        $consultant = User::factory()->consultant()->create();
         $member = Patient::factory()->member()->create([
             'balance' => 500,
             'membership_status' => MembershipStatus::Active,
@@ -292,7 +292,7 @@ class BillingTest extends TestCase
         ]);
         $visit = $this->openVisit($registry, $member);
 
-        $this->actingAs($nurse)->post(route('clinical-notes.store', $visit), [
+        $this->actingAs($consultant)->post(route('clinical-notes.store', $visit), [
             'complaint' => 'Headache for 2 days',
             'vitals' => 'BP 120/80, Temp 37.1',
             'examination_findings' => 'Mild dehydration',
@@ -300,7 +300,7 @@ class BillingTest extends TestCase
             'treatment_notes' => 'Paracetamol 1g',
             'procedures_performed' => 'Injection administered',
             'follow_up_instructions' => 'Return if symptoms persist',
-        ])->assertRedirect(route('nurse.queue'));
+        ])->assertRedirect(route('consultant.queue'));
 
         $this->assertDatabaseHas('clinical_notes', [
             'visit_id' => $visit->id,
@@ -364,16 +364,16 @@ class BillingTest extends TestCase
 
     private function recordClinicalNotes(Visit $visit): void
     {
-        $nurse = User::factory()->nurse()->create();
+        $consultant = User::factory()->consultant()->create();
 
-        $this->actingAs($nurse)->post(route('clinical-notes.store', $visit), [
+        $this->actingAs($consultant)->post(route('clinical-notes.store', $visit), [
             'complaint' => 'Severe headache',
             'vitals' => 'Temp 38.1',
             'examination_findings' => 'Fever and chills',
             'diagnosis' => 'Malaria',
             'treatment_notes' => 'Medication administered',
             'procedures_performed' => 'Malaria test',
-        ])->assertRedirect(route('nurse.queue'));
+        ])->assertRedirect(route('consultant.queue'));
     }
 
     private function addServiceCharge(User $user, Visit $visit, string $serviceName): void

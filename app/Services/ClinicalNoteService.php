@@ -10,7 +10,7 @@ use App\Models\Visit;
 use InvalidArgumentException;
 
 /**
- * Nurse workflow: record clinical notes on open patient visits.
+ * Consultant workflow: record clinical notes on open patient visits.
  */
 class ClinicalNoteService
 {

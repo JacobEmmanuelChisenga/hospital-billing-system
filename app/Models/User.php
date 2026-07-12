@@ -58,9 +58,9 @@ class User extends Authenticatable
         return $this->role === UserRole::Registry || $this->role === UserRole::Nursing;
     }
 
-    public function isNurse(): bool
+    public function isConsultant(): bool
     {
-        return $this->role === UserRole::Nurse;
+        return $this->role === UserRole::Consultant;
     }
 
     /** @deprecated Use isRegistryClerk() */

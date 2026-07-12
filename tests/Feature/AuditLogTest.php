@@ -15,7 +15,7 @@ class AuditLogTest extends TestCase
 
     public function test_nursing_staff_cannot_view_audit_log(): void
     {
-        $user = User::factory()->nurse()->create();
+        $user = User::factory()->consultant()->create();
 
         $this->actingAs($user)
             ->get(route('audit-logs.index'))

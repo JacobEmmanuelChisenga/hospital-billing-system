@@ -62,7 +62,7 @@
         @apply border-blue-200/80 bg-gradient-to-r from-blue-50 to-sky-50;
     }
 
-    .page-header--nurse {
+    .page-header--consultant {
         @apply border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-teal-50;
     }
 

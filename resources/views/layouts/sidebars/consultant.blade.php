@@ -2,22 +2,22 @@
     <x-sidebar-section title="Patient Care" />
     <div class="space-y-1">
         <x-sidebar-link
-            :href="route('nurse.queue')"
-            :active="request()->routeIs('nurse.queue')"
+            :href="route('consultant.queue')"
+            :active="request()->routeIs('consultant.queue')"
             icon="fa-solid fa-list-check"
         >
             Today's Queue
         </x-sidebar-link>
         <x-sidebar-link
-            :href="route('nurse.active')"
-            :active="request()->routeIs('nurse.active')"
+            :href="route('consultant.active')"
+            :active="request()->routeIs('consultant.active')"
             icon="fa-solid fa-stethoscope"
         >
             Active Visits
         </x-sidebar-link>
         <x-sidebar-link
-            :href="route('nurse.consultations')"
-            :active="request()->routeIs('nurse.consultations')"
+            :href="route('consultant.consultations')"
+            :active="request()->routeIs('consultant.consultations')"
             icon="fa-solid fa-notes-medical"
         >
             Consultation History

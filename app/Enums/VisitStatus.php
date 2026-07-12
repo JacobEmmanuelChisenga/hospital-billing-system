@@ -19,7 +19,7 @@ enum VisitStatus: string
             self::Registered => 'Registered',
             self::AwaitingPayment => 'Awaiting Payment',
             self::ReadyForConsultation => 'Ready for Consultation',
-            self::SeenByNurse => 'Seen by Nurse',
+            self::SeenByNurse => 'Seen by Consultant',
             self::AwaitingBilling => 'Awaiting Billing',
             self::Billed => 'Billed',
             self::Completed => 'Completed',

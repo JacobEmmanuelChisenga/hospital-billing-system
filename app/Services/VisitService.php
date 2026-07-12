@@ -61,7 +61,7 @@ class VisitService
     public function addCharge(Visit $visit, array $data, User $user): ChargeLine
     {
         if (! $visit->canAddCharges()) {
-            throw new InvalidArgumentException('Charges can only be added after the nurse completes clinical notes.');
+            throw new InvalidArgumentException('Charges can only be added after the consultant completes clinical notes.');
         }
 
         $service = BillableService::query()
@@ -274,7 +274,7 @@ class VisitService
     }
 
     /**
-     * Whether the visit must wait for Accounts before the nurse can see the patient.
+     * Whether the visit must wait for Accounts before the consultant can see the patient.
      *
      * Members and dependants are evaluated on the billable account (principal for
      * dependants). A dependant's own pending membership fee does not block care

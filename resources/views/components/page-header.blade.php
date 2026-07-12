@@ -9,7 +9,7 @@
     'page-header',
     'page-header--dashboard' => $dashboard,
     'page-header--registry' => $theme === 'registry',
-    'page-header--nurse' => $theme === 'nurse',
+    'page-header--consultant' => $theme === 'consultant',
     'page-header--accounts' => $theme === 'accounts',
     'page-header--admin' => $theme === 'admin',
 ])>

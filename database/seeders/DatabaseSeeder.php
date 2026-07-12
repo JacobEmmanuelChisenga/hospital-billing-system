@@ -48,15 +48,18 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'nurse@ronaldross.local'],
+            ['email' => 'consultant@ronaldross.local'],
             [
-                'name' => 'Nursing Officer',
+                'name' => 'Consultant',
                 'password' => $defaultPassword,
-                'role' => UserRole::Nurse,
+                'role' => UserRole::Consultant,
                 'status' => UserStatus::Active,
                 'email_verified_at' => now(),
             ]
         );
+
+        // Remove legacy nurse account if an older seeder or deploy created it.
+        User::query()->where('email', 'nurse@ronaldross.local')->delete();
 
         $this->call(BillableServiceSeeder::class);
     }

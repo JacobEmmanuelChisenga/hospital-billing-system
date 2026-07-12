@@ -47,7 +47,7 @@ class PatientController extends Controller
     }
 
     /**
-     * Quick patient lookup — search-first view for Registry and Nurse.
+     * Quick patient lookup — search-first view for Registry and Consultant.
      */
     public function search(Request $request): View
     {

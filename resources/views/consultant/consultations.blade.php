@@ -5,7 +5,7 @@
 
     <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <x-filter-panel class="!mb-0 flex-1">
-            <form method="GET" action="{{ route('nurse.consultations') }}" class="flex flex-col gap-3 sm:flex-row">
+            <form method="GET" action="{{ route('consultant.consultations') }}" class="flex flex-col gap-3 sm:flex-row">
                 <div class="flex-1">
                     <input type="text" name="search" value="{{ $search }}" placeholder="Search patient..."
                         class="form-input !mt-0">
@@ -16,7 +16,7 @@
 
         <div class="flex flex-wrap gap-2">
             @foreach (['today' => 'Today', 'yesterday' => 'Yesterday', 'week' => 'This Week'] as $value => $label)
-                <a href="{{ route('nurse.consultations', array_filter(['period' => $value, 'search' => $search ?: null])) }}"
+                <a href="{{ route('consultant.consultations', array_filter(['period' => $value, 'search' => $search ?: null])) }}"
                    @class([
                        'btn btn-sm',
                        'btn-primary' => $period === $value,

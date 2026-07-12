@@ -96,7 +96,7 @@
                 @if (Auth::user()->canRecordClinicalNotes() && ! $visit->canRecordClinicalNotes())
                     <p class="mt-4 text-sm text-slate-500">This visit is <span class="font-medium">{{ $visit->status->label() }}</span>. You can record notes once the patient is ready for consultation.</p>
                 @else
-                    <p class="mt-4 text-sm text-slate-500">No clinical notes recorded yet. The nurse documents the visit before charges are posted.</p>
+                    <p class="mt-4 text-sm text-slate-500">No clinical notes recorded yet. The consultant documents the visit before charges are posted.</p>
                 @endif
             @endif
         </div>

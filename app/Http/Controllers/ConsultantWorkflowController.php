@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Nurse workflow — consultation queue, active visits, and history.
+ * Consultant workflow — consultation queue, active visits, and history.
  */
-class NurseWorkflowController extends Controller
+class ConsultantWorkflowController extends Controller
 {
     public function queue(Request $request): View
     {
@@ -24,7 +24,7 @@ class NurseWorkflowController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('nurse.queue', [
+        return view('consultant.queue', [
             'visits' => $visits,
             'search' => $search,
         ]);
@@ -43,7 +43,7 @@ class NurseWorkflowController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('nurse.active', [
+        return view('consultant.active', [
             'visits' => $visits,
             'search' => $search,
         ]);
@@ -66,7 +66,7 @@ class NurseWorkflowController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('nurse.consultations', [
+        return view('consultant.consultations', [
             'visits' => $visits,
             'search' => $search,
             'period' => $period,

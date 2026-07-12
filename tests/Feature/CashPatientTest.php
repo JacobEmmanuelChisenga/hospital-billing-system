@@ -135,16 +135,16 @@ class CashPatientTest extends TestCase
 
     private function recordClinicalNotes(Visit $visit): void
     {
-        $nurse = User::factory()->nurse()->create();
+        $consultant = User::factory()->consultant()->create();
 
-        $this->actingAs($nurse)->post(route('clinical-notes.store', $visit), [
+        $this->actingAs($consultant)->post(route('clinical-notes.store', $visit), [
             'complaint' => 'General consultation',
             'vitals' => 'BP 120/80',
             'examination_findings' => 'Stable',
             'diagnosis' => 'Minor ailment',
             'treatment_notes' => 'Treatment given',
             'procedures_performed' => 'Dressing',
-        ])->assertRedirect(route('nurse.queue'));
+        ])->assertRedirect(route('consultant.queue'));
     }
 
     private function addServiceCharge(User $user, Visit $visit, string $serviceName): void
